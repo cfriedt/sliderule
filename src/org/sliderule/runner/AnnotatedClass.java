@@ -86,8 +86,8 @@ class AnnotatedClass {
 			Class<Annotation> klass = (Class<Annotation>) e.getKey();
 			int val = (int)(Integer)e.getValue();
 			anna = new ArrayList<Annotation>();
-			anna.addAll( Arrays.asList( f.getAnnotationsByType( klass ) ) );
-			anna.addAll( Arrays.asList( f.getDeclaredAnnotationsByType( klass ) ) );
+			anna.addAll( Arrays.asList( getAnnotationsByType( f, klass ) ) );
+			anna.addAll( Arrays.asList( getDeclaredAnnotationsByType( f, klass ) ) );
 			if ( ! anna.isEmpty() ) {
 				field_array[ val ].add( f );
 			}
@@ -95,21 +95,48 @@ class AnnotatedClass {
 	}
 
 	@SuppressWarnings("unchecked")
-	public void filterMethod( Method f ) {
+	public void filterMethod( Method m ) {
 		List<Annotation> anna;
 		
 		for( Map.Entry<Class<?>,Integer> e: method_map.entrySet() ) {
 			Class<Annotation> klass = (Class<Annotation>) e.getKey();
 			int val = (int)(Integer)e.getValue();
 			anna = new ArrayList<Annotation>();
-			anna.addAll( Arrays.asList( f.getAnnotationsByType( klass ) ) );
-			anna.addAll( Arrays.asList( f.getDeclaredAnnotationsByType( klass ) ) );
+			anna.addAll( Arrays.asList( getAnnotationsByType( m, klass ) ) );
+			anna.addAll( Arrays.asList( getDeclaredAnnotationsByType( m, klass ) ) );
 			if ( ! anna.isEmpty() ) {
-				method_array[ val ].add( f );
+				method_array[ val ].add( m );
 			}
 		}
 	}
 
+
+	private static Annotation[] getAnnotations( boolean declared, Object o, Class<?> klass ) {
+		final Annotation[] template = new Annotation[0];
+		ArrayList<Annotation> ala = new ArrayList<Annotation>();
+		Annotation[] a = template;
+		if ( o instanceof Field ) {
+			Field f = (Field)o;
+			a = declared ? f.getDeclaredAnnotations() : f.getAnnotations();
+		} else if ( o instanceof Method ) {
+			Method m = (Method)o;
+			a = declared ? m.getDeclaredAnnotations() : m.getAnnotations();
+		} else {
+			throw new IllegalArgumentException();
+		}
+		for( Annotation an: a ) {
+			if ( an.getClass() == klass ) {
+				ala.add( an );
+			}
+		}
+		return ala.toArray( template );
+	}
+	private static Annotation[] getAnnotationsByType( Object o, Class<?> klass ) {
+		return getAnnotations( false, o, klass );
+	}
+	private static Annotation[] getDeclaredAnnotationsByType( Object o, Class<?> klass ) {
+		return getAnnotations( true, o, klass );
+	}
 
 	public Set<Field>  getParamFields() {
 		return field_array[ FIELD_PARAM ];
