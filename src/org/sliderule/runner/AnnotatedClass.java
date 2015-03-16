@@ -111,30 +111,31 @@ class AnnotatedClass {
 	}
 
 
-	private static Annotation[] getAnnotations( boolean declared, Object o, Class<?> klass ) {
-		final Annotation[] template = new Annotation[0];
-		ArrayList<Annotation> ala = new ArrayList<Annotation>();
-		Annotation[] a = template;
+	@SuppressWarnings("unchecked")
+	private static <T extends Annotation> T[] getAnnotations( boolean declared, Object o, Class<T> klass ) {
+		T[] a = null;
 		if ( o instanceof Field ) {
 			Field f = (Field)o;
-			a = declared ? f.getDeclaredAnnotations() : f.getAnnotations();
+			a = (T[]) ( declared ? f.getDeclaredAnnotations() : f.getAnnotations() );
 		} else if ( o instanceof Method ) {
 			Method m = (Method)o;
-			a = declared ? m.getDeclaredAnnotations() : m.getAnnotations();
+			a = (T[]) ( declared ? m.getDeclaredAnnotations() : m.getAnnotations() );
 		} else {
 			throw new IllegalArgumentException();
 		}
-		for( Annotation an: a ) {
-			if ( an.getClass() == klass ) {
-				ala.add( an );
+		ArrayList<T> ala = new ArrayList<T>();
+		for( T an: a ) {
+			Class<? extends Annotation> ant = an.annotationType();
+			if ( ant == klass ) {
+				ala.add( (T) an );
 			}
 		}
-		return ala.toArray( template );
+		return ala.toArray( a );
 	}
-	private static Annotation[] getAnnotationsByType( Object o, Class<?> klass ) {
+	private static <T extends Annotation> T[] getAnnotationsByType( Object o, Class<T> klass ) {
 		return getAnnotations( false, o, klass );
 	}
-	private static Annotation[] getDeclaredAnnotationsByType( Object o, Class<?> klass ) {
+	private static <T extends Annotation> T[] getDeclaredAnnotationsByType( Object o, Class<T> klass ) {
 		return getAnnotations( true, o, klass );
 	}
 
