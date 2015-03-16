@@ -102,8 +102,14 @@ class AnnotatedClass {
 			Class<Annotation> klass = (Class<Annotation>) e.getKey();
 			int val = (int)(Integer)e.getValue();
 			anna = new ArrayList<Annotation>();
-			anna.addAll( Arrays.asList( getAnnotationsByType( m, klass ) ) );
-			anna.addAll( Arrays.asList( getDeclaredAnnotationsByType( m, klass ) ) );
+			List<Annotation> z = Arrays.asList( getAnnotationsByType( m, klass ) );
+			if ( ! ( null == z || z.isEmpty() || 0 == z.size() || ( 1 == z.size() && null == z.get(0) ) ) ) {
+				anna.addAll( z );
+			}
+			z = Arrays.asList( getDeclaredAnnotationsByType( m, klass ) );
+			if ( ! ( null == z || z.isEmpty() || 0 == z.size() || ( 1 == z.size() && null == z.get(0) ) ) ) {
+				anna.addAll( z );
+			}
 			if ( ! anna.isEmpty() ) {
 				method_array[ val ].add( m );
 			}
@@ -130,7 +136,8 @@ class AnnotatedClass {
 				ala.add( (T) an );
 			}
 		}
-		return ala.toArray( a );
+		T[] r = ala.toArray( a );
+		return r;
 	}
 	private static <T extends Annotation> T[] getAnnotationsByType( Object o, Class<T> klass ) {
 		return getAnnotations( false, o, klass );

@@ -295,7 +295,7 @@ public final class SlideRuleMain {
 		}
 	}
 	private void go()
-	throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
+	throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, InterruptedException
 	{
 		Algorithm.evaluate( arguments, context );
 	}
@@ -335,6 +335,9 @@ public final class SlideRuleMain {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch ( InvocationTargetException e ) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch ( InterruptedException e ) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

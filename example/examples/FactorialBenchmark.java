@@ -27,6 +27,34 @@ public final class FactorialBenchmark {
 		"20",
 	}) int number; // -Dnumber=1,2,3
 
+	@BeforeExperiment
+	void beforeExperiment() throws Exception {
+		System.out.println( "Hello, BeforeExperiment world!" );
+	}
+	@BeforeExperiment
+	void beforeExperiment2() throws Exception {
+		System.out.println( "Goodbye, BeforeExperiment world..." );
+	}
+
+	@AfterExperiment
+	void afterExperiment() throws Exception {
+		System.out.println( "Helo, AfterExperiment world!" );
+	}
+	@AfterExperiment
+	void afterExperiment2() throws Exception {
+		System.out.println( "Goodbye, AfterExperiment world..." );
+	}
+
+	@Benchmark
+	long iterative( int reps ) {
+		int number = this.number;
+		long dummy = 0L;
+		for( int i=0; i < reps; i++ ) {
+			dummy |= Factorial.iterative( number );
+		}
+		return dummy;
+	}
+
 	@Benchmark
 	long recursive( int reps ) {
 		int number = this.number;
@@ -38,11 +66,11 @@ public final class FactorialBenchmark {
 	}
 
 	@Benchmark
-	long iterative( int reps ) {
+	long tailRecursive( int reps ) {
 		int number = this.number;
 		long dummy = 0L;
 		for( int i=0; i < reps; i++ ) {
-			dummy |= Factorial.iterative( number );	
+			dummy |= Factorial.tailRecursive( number, 1 );
 		}
 		return dummy;
 	}

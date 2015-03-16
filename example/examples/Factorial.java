@@ -19,6 +19,15 @@ package examples;
 
 public class Factorial {
 	
+	static long iterative( int number ) {
+		checkValidNumber( number );
+		long result = 1;
+		for ( ; number > 0; number-- ) {
+			result *= number;
+		}
+		return result;
+	}
+
 	static long recursive( int number ) {
 		switch ( checkValidNumber( number ) ) {
 		case 0:
@@ -28,13 +37,13 @@ public class Factorial {
 		}
 	}
 
-	static long iterative( int number ) {
-		checkValidNumber( number );
-		long result = 1;
-		for ( int i = number; i > 0; i-- ) {
-			result *= i;
+	static long tailRecursive( int number, long result ) {
+		switch ( checkValidNumber( number ) ) {
+		case 0:
+			return result;
+		default:
+			return tailRecursive( number - 1, result * number );
 		}
-		return result;
 	}
 
 	private static int checkValidNumber( int number ) {
