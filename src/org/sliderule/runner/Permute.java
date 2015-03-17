@@ -9,7 +9,7 @@ import org.sliderule.runner.*;
 public class Permute {
 
 	private Permute() {}
-	
+
 	static int euprod( int[] cardinality ) {
 		int result = 1;
 		for( int i=0; i < cardinality.length; result *= cardinality[ i ], i++ );
@@ -23,17 +23,17 @@ public class Permute {
 	}
 
 	static void permute() {
-		
+
 		int[] cardinality = new int[] {
 			3, /* a, b, c, */
 			4, /* d, e, f, g, */
 			2, /* h, i, */
 		};
-		
+
 		int nrows = euprod( cardinality );
 		int ncols = cardinality.length;
 		int[][] foo = new int[ nrows ][ ncols ];
-		
+
 		for( int col=0; col < ncols; col++ ) {
 			int val = 0;
 			int reps = euprod_omit( cardinality, col );
@@ -46,7 +46,7 @@ public class Permute {
 			}
 		}
 	}
-	
+
 /*
 	static void permute( Algorithm alg ) {
 		AnnotatedClass proto;
@@ -69,7 +69,7 @@ public class Permute {
 			cardinality[ i ] = value_string.size();
 			n_param_permutations *= Algorithm.factorial( cardinality[ i ] );
 		}
-		
+
 		int j=0;
 		for( int m=0; m<n_param_fields; m++ ) {
 			for( int n=0; n<n_param_fields; n++ ) {

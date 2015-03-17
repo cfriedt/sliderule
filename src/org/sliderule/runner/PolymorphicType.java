@@ -3,7 +3,7 @@ package org.sliderule.runner;
 final class PolymorphicType {
 	final Class<?> f;
 	final Object value;
-	
+
 	public PolymorphicType( Class<?> f, Object value ) {
 		this.f = f;
 		this.value = value;

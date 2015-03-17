@@ -38,7 +38,7 @@ public final class FactorialBenchmark {
 		"zab",
 		"halb",
 	}) String dummy_param2;
-	
+
 	@Benchmark
 	long iterative( int reps ) {
 		int number = this.number;
@@ -54,7 +54,7 @@ public final class FactorialBenchmark {
 		int number = this.number;
 		long dummy = 0L;
 		for( int i=0; i < reps; i++ ) {
-			dummy |= Factorial.recursive( number );	
+			dummy |= Factorial.recursive( number );
 		}
 		return dummy;
 	}

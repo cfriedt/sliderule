@@ -24,21 +24,21 @@ import org.sliderule.*;
 import org.sliderule.model.*;
 
 class Algorithm {
-	
+
 	private static final int N_WARMUP_REPS = 10000;
-	
+
 	final Arguments arguments;
 	final Context context;
 	final ArrayList<ClassAndInstance> alcai;
 	final ArrayList<ArrayList<PolymorphicType>> param_values;
-	
+
 	private Algorithm( Arguments arguments, Context context ) {
 		this.arguments = arguments;
 		this.context = context;
 		this.alcai = new ArrayList<ClassAndInstance>();
 		this.param_values = new ArrayList<ArrayList<PolymorphicType>>();
 	}
-	
+
 	static class ClassAndInstance {
 		public final AnnotatedClass klass;
 		public final Object instance;
@@ -49,7 +49,7 @@ class Algorithm {
 			this.trials = new ArrayList<Trial>();
 		}
 	}
-	
+
 	static int factorial( int x ) {
 		int result = 1;
 		if ( x < 0 ) {
@@ -89,7 +89,7 @@ class Algorithm {
 			}
 		}
 	}
-	
+
 	private void bench() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
 	{
 		for( ClassAndInstance cai: alcai ) {
@@ -101,10 +101,10 @@ class Algorithm {
 			}
 
 			for( Method m: k.getBenchmarkMethods() ) {
-				
+
 //				double mean = 0;
 //				double variance = 0;
-//				
+//
 //				long nanos = 0;
 //				for( int i=0; i<arguments.trials; i++ ) {
 //					long start_nanos = System.nanoTime();
@@ -125,7 +125,7 @@ class Algorithm {
 			}
 		}
 	}
-	
+
 	public static void evaluate( Arguments a, Context c )
 	throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, InterruptedException
 	{

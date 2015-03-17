@@ -18,7 +18,7 @@
 package examples;
 
 public class Factorial {
-	
+
 	static long iterative( int number ) {
 		checkValidNumber( number );
 		long result = 1;

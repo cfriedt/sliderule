@@ -105,7 +105,7 @@ public class AnnotatedClass {
 			}
 		}
 	}
-	
+
 	public <T extends Annotation> void filterField( Field f ) {
 		filterMember( f );
 	}

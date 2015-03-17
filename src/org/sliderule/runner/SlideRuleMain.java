@@ -25,7 +25,7 @@ public final class SlideRuleMain {
 	private SlideRuleMain() {}
 	private Arguments arguments = new Arguments();
 	private Context context = new Context();
-	
+
 	@SuppressWarnings("serial")
 	private static class HelpException extends Exception {}
 	@SuppressWarnings("serial")
@@ -50,7 +50,7 @@ public final class SlideRuleMain {
 	}
 	@SuppressWarnings("serial")
 	private static class NonUniformBenchmarkClassesException extends Exception {}
-	
+
 	private void parseArguments( String[] arg )
 	throws SpecificMissingArgumentException, SpecificIllegalArgumentException, SpecificFileNotFoundException, SpecificIllegalPropertyException, SpecificClassNotFoundException, HelpException
 	{
@@ -212,7 +212,7 @@ public final class SlideRuleMain {
 		if ( a.size() != b.size() ) {
 			return false;
 		}
-		// FIXME: verify field types 
+		// FIXME: verify field types
 		for( Field f: a) {
 			boolean found = false;
 			for( Field g: b ) {
@@ -232,7 +232,7 @@ public final class SlideRuleMain {
 		if ( a.size() != b.size() ) {
 			return false;
 		}
-		// FIXME: verify field types 
+		// FIXME: verify field types
 		for( Method f: a) {
 			boolean found = false;
 			for( Method g: b ) {
@@ -252,7 +252,7 @@ public final class SlideRuleMain {
 	throws NonUniformBenchmarkClassesException
 	{
 		AnnotatedClass prev_ac = null;
-		
+
 		for( Class<?> klass: arguments.bench_classes ) {
 
 			AnnotatedClass ac = new AnnotatedClass( klass );
@@ -274,11 +274,11 @@ public final class SlideRuleMain {
 				m.setAccessible( true );
 				ac.filterMethod( m );
 			}
-			
+
 			if ( null == prev_ac ) {
 				if ( ! ac.getBenchmarkMethods().isEmpty() ) {
 					prev_ac = ac;
-					context.addAnnotatedClass( ac );	
+					context.addAnnotatedClass( ac );
 				}
 			} else {
 				if ( !(
