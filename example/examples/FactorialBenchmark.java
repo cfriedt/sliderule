@@ -27,24 +27,18 @@ public final class FactorialBenchmark {
 		"20",
 	}) int number; // -Dnumber=1,2,3
 
-	@BeforeExperiment
-	void beforeExperiment() throws Exception {
-		System.out.println( "Hello, BeforeExperiment world!" );
-	}
-	@BeforeExperiment
-	void beforeExperiment2() throws Exception {
-		System.out.println( "Goodbye, BeforeExperiment world..." );
-	}
+	@Param({
+		"foo",
+		"bar",
+	}) String dummy_param1;
 
-	@AfterExperiment
-	void afterExperiment() throws Exception {
-		System.out.println( "Helo, AfterExperiment world!" );
-	}
-	@AfterExperiment
-	void afterExperiment2() throws Exception {
-		System.out.println( "Goodbye, AfterExperiment world..." );
-	}
-
+	@Param({
+		"oof",
+		"rab",
+		"zab",
+		"halb",
+	}) String dummy_param2;
+	
 	@Benchmark
 	long iterative( int reps ) {
 		int number = this.number;
