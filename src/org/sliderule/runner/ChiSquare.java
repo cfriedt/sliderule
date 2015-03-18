@@ -118,15 +118,13 @@ final class ChiSquare {
 	 * <blockquote>"In other words, we shall determine the minimum sample size, {@code n}, for which the probability will be at least {@code p} that neither {@code u} nor {@code o} will differ from the unknown value it is estimating by more than q &#963;."</blockquote>
 	 * 
 	 * @param n sample size, n >= 2
-	 * @param u sample mean
-	 * @param o sample standard deviation
 	 * @param q acceptable deviation from the normal distribution, relative to &#963;. q > 0
 	 * @param p certainty requirement. 0 < p < 1
 	 * @return True, if the sample size, n, is adequately large enough to gaurantee that u and o are accurate estimatee, otherwise, false.
 	 * 
 	 * @see DeGroot, Morris H., and Schervish, Mark J. Probability and Statistics, 3rd Edition. Toronto: Addison-Wesley, 2002. pp. 402-403. Print.</p>
 	 */
-	static boolean estimateMeanAndStandardDeviation( int n, double u, double o, double q, double p ) {
+	static boolean estimateMeanAndStandardDeviation( int n, double q, double p ) {
 		boolean r = false;
 		if ( n < 2 ) {
 			throw new IllegalArgumentException();
