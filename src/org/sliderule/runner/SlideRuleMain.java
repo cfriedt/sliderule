@@ -257,26 +257,8 @@ public final class SlideRuleMain {
 
 			AnnotatedClass ac = new AnnotatedClass( klass );
 
-			ArrayList<Field> fs = new ArrayList<Field>();
-			fs.addAll( Arrays.asList( klass.getFields() ) );
-			fs.addAll( Arrays.asList( klass.getDeclaredFields() ) );
-
-			for( Field f: fs ) {
-				f.setAccessible( true );
-				ac.filterField( f );
-			}
-
-			ArrayList<Method> ms = new ArrayList<Method>();
-			ms.addAll( Arrays.asList( klass.getMethods() ) );
-			ms.addAll( Arrays.asList( klass.getDeclaredMethods() ) );
-
-			for( Method m: ms ) {
-				m.setAccessible( true );
-				ac.filterMethod( m );
-			}
-
 			if ( null == prev_ac ) {
-				if ( ! ac.getBenchmarkMethods().isEmpty() ) {
+				if ( ! ( ac.getBenchmarkMethods().isEmpty() && ac.getMacrobenchmarkMethods().isEmpty() ) ) {
 					prev_ac = ac;
 					context.addAnnotatedClass( ac );
 				}
@@ -327,19 +309,14 @@ public final class SlideRuleMain {
 		} catch ( NonUniformBenchmarkClassesException e ) {
 			System.err.println( "benchmark classes must be uniform when trying to compare multiple benchmark classes" );
 		} catch ( InstantiationException e ) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch ( IllegalAccessException e ) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch ( IllegalArgumentException e ) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch ( InvocationTargetException e ) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch ( InterruptedException e ) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		if ( 0 != return_val || srm.arguments.help ) {

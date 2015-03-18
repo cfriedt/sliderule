@@ -18,12 +18,16 @@ package org.sliderule.runner;
 
 import java.util.*;
 
+import org.sliderule.api.*;
+
 class Context {
 
-	private final HashSet<AnnotatedClass> bench_classes;
+	final HashSet<AnnotatedClass> bench_classes;
+	final ResultProcessor results_processor;
 	
 	public Context() {
 		bench_classes = new HashSet<AnnotatedClass>();
+		results_processor = new ConsoleResultProcessor();
 	}
 
 	public void addAnnotatedClass( AnnotatedClass ac ) {

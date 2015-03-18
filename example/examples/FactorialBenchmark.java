@@ -18,6 +18,7 @@
 package examples;
 
 import org.sliderule.*;
+import org.sliderule.api.*;
 
 public final class FactorialBenchmark {
 
@@ -26,18 +27,6 @@ public final class FactorialBenchmark {
 		"10",
 		"20",
 	}) int number; // -Dnumber=1,2,3
-
-	@Param({
-		"foo",
-		"bar",
-	}) String dummy_param1;
-
-	@Param({
-		"oof",
-		"rab",
-		"zab",
-		"halb",
-	}) String dummy_param2;
 
 	@Benchmark
 	long iterative( int reps ) {
@@ -62,6 +51,17 @@ public final class FactorialBenchmark {
 	@Benchmark
 	long tailRecursive( int reps ) {
 		int number = this.number;
+		long dummy = 0L;
+		for( int i=0; i < reps; i++ ) {
+			dummy |= Factorial.tailRecursive( number, 1 );
+		}
+		return dummy;
+	}
+
+	@Macrobenchmark
+	long mystery() {
+		int number = this.number;
+		int reps = 10000;
 		long dummy = 0L;
 		for( int i=0; i < reps; i++ ) {
 			dummy |= Factorial.tailRecursive( number, 1 );

@@ -72,6 +72,24 @@ public class AnnotatedClass {
 		for( int i=0; i < method_array.length; i++ ) {
 			method_array[i] = new HashSet<Method>();
 		}
+		
+		ArrayList<Field> fs = new ArrayList<Field>();
+		fs.addAll( Arrays.asList( klass.getFields() ) );
+		fs.addAll( Arrays.asList( klass.getDeclaredFields() ) );
+
+		for( Field f: fs ) {
+			f.setAccessible( true );
+			filterField( f );
+		}
+
+		ArrayList<Method> ms = new ArrayList<Method>();
+		ms.addAll( Arrays.asList( klass.getMethods() ) );
+		ms.addAll( Arrays.asList( klass.getDeclaredMethods() ) );
+
+		for( Method m: ms ) {
+			m.setAccessible( true );
+			filterMethod( m );
+		}
 	}
 
 	public Class<?> getAnnotatedClass() {
@@ -106,11 +124,11 @@ public class AnnotatedClass {
 		}
 	}
 
-	public <T extends Annotation> void filterField( Field f ) {
+	private <T extends Annotation> void filterField( Field f ) {
 		filterMember( f );
 	}
 
-	public <T extends Annotation> void filterMethod( Method m ) {
+	private <T extends Annotation> void filterMethod( Method m ) {
 		filterMember( m );
 	}
 
@@ -148,7 +166,7 @@ public class AnnotatedClass {
 		return getAnnotations( true, o, klass );
 	}
 
-	public Set<Field>  getParamFields() {
+	public Set<Field> getParamFields() {
 		return field_array[ FIELD_PARAM ];
 	}
 
