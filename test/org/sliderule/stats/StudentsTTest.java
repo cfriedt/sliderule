@@ -1,8 +1,27 @@
-package org.sliderule.runner;
+/*
+ * Copyright (C) 2015 Christopher Friedt <chrisfriedt@gmail.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.sliderule.stats;
 
 import static org.junit.Assert.*;
 
+import java.util.*;
+
 import org.junit.*;
+import org.sliderule.stats.*;
 
 public class StudentsTTest {
 	@Test
@@ -65,5 +84,25 @@ public class StudentsTTest {
 		expected_confidence = 0.95;
 		actual_confidence = StudentsT.cdf( n, StudentsT.inv( n, expected_confidence ) );
 		assertEquals( "cdf( inv( " + expected_confidence + " ) = " + expected_confidence, expected_confidence, actual_confidence, confidence_epsilon );
+	}
+	@Test
+	public void test() {
+		// right out of Chapra
+		int n = 24;
+		double u = 6.6;
+		double o = 0.097133;
+		double confidence = 0.95;
+		double expected_t = 2.068655;
+		double epsilon_t = 0.001;
+		double epsilon_bounds = 0.001;
+		double actual_t = StudentsT.inv( n, confidence );
+		assertEquals( "t was correct", expected_t, actual_t, epsilon_t );
+		double[] expected_bounds = new double[] { 6.5590, 6.6410 };
+		double[] actual_bounds = StudentsT.bounds( n, confidence, u, o );
+		assertEquals( "actual_bounds[0] == " + expected_bounds[0], expected_bounds[0], actual_bounds[0], epsilon_bounds );
+		assertEquals( "actual_bounds[1] == " + expected_bounds[1], expected_bounds[1], actual_bounds[1], epsilon_bounds );
+		boolean expected_pass = true;
+		boolean actual_pass = StudentsT.test( n, confidence, u, o ); 
+		assertEquals( "mean of " + u + " is possible with " + confidence + " confidence", expected_pass, actual_pass );
 	}
 }

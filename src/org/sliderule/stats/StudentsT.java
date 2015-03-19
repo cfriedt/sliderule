@@ -1,8 +1,50 @@
-package org.sliderule.runner;
+/*
+ * Copyright (C) 2015 Christopher Friedt <chrisfriedt@gmail.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-final class StudentsT {
+package org.sliderule.stats;
+
+/**
+ * <p><b>Student's <i>t</i>-Distribution</b></p>
+ * 
+ * <p>This class provides a time-efficient means for querying values and
+ * inverse values from the
+ * <a href="http://en.wikipedia.org/wiki/Cumulative_distribution_function">cumulative distribution function (CDF)</a>
+ * of
+ * <a href="http://en.wikipedia.org/wiki/Student%27s_t-distribution">Student's <i>t</i>-distribution</a>.
+ * Also provided is a method to find the {@link #bounds} for a given
+ * <a href="http://en.wikipedia.org/wiki/Confidence_interval">confidence interval</a>
+ * as well as a method to {@link #test} sample statistics - i.e. perform
+ * <a href="http://en.wikipedia.org/wiki/Student's_t-test">Student's <i>t</i>-test</a>.</p>
+ * 
+ * <p>Note, the {@link #test} is not sufficient to show that the random
+ * variable approximately described by sample statistics is actually
+ * {@link Normal}.
+ * For that purpose, Please see {@link ChiSquared}.
+ * </p>
+ * @author <a href="mailto:chrisfriedt@gmail.com">Christopher Friedt</a>
+ * @see
+ *   <ul>
+ *     <li>Wikipedia: <a href="http://en.wikipedia.org/wiki/Student%27s_t-distribution">Student's t-distribution</a></li>
+ *     <li>Chapra, Steven C., and Canale, Raymond P. Numerical Methods for Engineers, 4th Ed. Toronto: McGraw-Hill, 2002. pp 435. Print.</li>
+ *     <li>DeGroot, Morris H., and Schervish, Mark J. Probability and Statistics, 3rd Ed. Toronto: Addison-Wesley, 2002. pp. 404-416,776-777. Print.</li>
+ *   </ul> 
+ */
+public final class StudentsT {
 	// produced via Matlab's tinv function
-	private static final double p[] = { 0.55, 0.60, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 0.975, 0.99, 0.995, };
+	private static final double xp[] = { 0.55, 0.60, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 0.975, 0.99, 0.995, };
 	private static final double xtable[][] = {
 		{ 0.158384, 0.324920, 0.509525, 0.726543, 1.000000, 1.376382, 1.962611, 3.077684, 6.313752, 12.706205, 31.820516, 63.656741,  },
 		{ 0.142134, 0.288675, 0.444750, 0.617213, 0.816497, 1.060660, 1.386207, 1.885618, 2.919986, 4.302653, 6.964557, 9.924843,  },
@@ -129,21 +171,19 @@ final class StudentsT {
 	private StudentsT() {}
 
 	/**
-	 * <p>Evaluate the cumulative distribution function of the <a href="http://en.wikipedia.org/wiki/Student%27s_t-distribution">Student's t distribution</a>.</p> 
+	 * Evaluate the cumulative distribution function of the {@link StudentsT}
+	 * distribution. 
 	 * @param n sample size such that there are {@code n-1} degrees of freedom. {@code 2 <= n}
 	 * @param x value of random variable {@code X}
 	 * @return {@code p = Pr( X <= x | n-1 )}
-	 * @see
-	 *   <ul>
-	 *     <li>Chapra, Steven C., and Canale, Raymond P. Numerical Methods for Engineers, 4th Ed. Toronto: McGraw-Hill, 2002. pp 435. Print.</li>
-	 *     <li>DeGroot, Morris H., and Schervish, Mark J. Probability and Statistics, 3rd Ed. Toronto: Addison-Wesley, 2002. pp. 776-777. Print.</li>
-	 *   </ul>  
 	 */
 	public static double cdf( int n, double x ) {
 		if ( n < 2 ) {
 			throw new IllegalArgumentException();
 		}
-
+		// values converge after this point
+		n = ( n >= xtable.length - 1 ) ? xtable.length - 1 : n;
+		
 		// Use symmetry property rather than double size of xtable
 		boolean negative = x < 0;
 		x = negative ? -x : x;
@@ -153,7 +193,7 @@ final class StudentsT {
 		int i=0;
 		for( double xx: xrow ) {
 			if ( xx < x ) {
-				double alpha = 2 * ( 1 - p[ i ] ); 
+				double alpha = 2 * ( 1 - xp[ i ] ); 
 				r = 1 - alpha;
 				i++;
 			} else {
@@ -165,24 +205,20 @@ final class StudentsT {
 	}
 
 	/**
-	 * <p>Evaluate the inverse of the cumulative distribution function of the <a href="http://en.wikipedia.org/wiki/Student%27s_t-distribution">Student's t distribution</a></p> 
-	 * @param n sample size such that there are {@code n-1} degrees of freedom. {@code 2 <= n}
+	 * Evaluate the inverse of the cumulative distribution function of the
+	 * {@link StudentsT} distribution.
+	 * @param n sample size such that there are {@code n-1} degrees of freedom.{@code 2 <= n}
 	 * @param p level of confidence. {@code 0 <= p <= 1}
 	 * @return {@code x} &ni; {@code Pr( X <= x | n-1 ) = {@code p}
-	 * @see
-	 *   <ul>
-	 *     <li>Chapra, Steven C., and Canale, Raymond P. Numerical Methods for Engineers, 4th Ed. Toronto: McGraw-Hill, 2002. pp 435. Print.</li>
-	 *     <li>DeGroot, Morris H., and Schervish, Mark J. Probability and Statistics, 3rd Ed. Toronto: Addison-Wesley, 2002. pp. 776-777. Print.</li>
-	 *   </ul>
 	 */
-	static double inv( int n, double p ) {
+	public static double inv( int n, double p ) {
 		if ( p < 0 || p > 1 ) {
 			throw new IllegalArgumentException();
 		}
 		if ( n < 2 ) {
 			throw new IllegalArgumentException();
 		}
-		// probabilities converge after this point
+		// values converge after this point
 		n = ( n >= xtable.length - 1 ) ? xtable.length - 1 : n;
 		
 		double r = 0;
@@ -192,12 +228,52 @@ final class StudentsT {
 		double pvalue = 1 - half_alpha;
 		double[] xrow = xtable[ n - 2 ];
 		int i;
-		for( i=0; i<StudentsT.p.length; i++ ) {
-			if ( pvalue < StudentsT.p[ i ] ) {
+		for( i=0; i < xp.length; i++ ) {
+			if ( pvalue < xp[ i ] ) {
 				break;
 			}
 		}
 		r = negative ? -xrow[ i ] : xrow[ i ];
 		return r;
+	}
+	/**
+	 * Determine the confidence interval for sample statistics, assuming that
+	 * the random variable they approximately describe is {@link Normal}.   
+	 * @param n sample size such that there are {@code n-1} degrees of freedom. {@code 2 <= n}
+	 * @param p level of confidence. {@code 0 <= p <= 1}
+	 * @param u sample mean.
+	 * @param o sample variance.
+	 * @return {@code [ L, U ]} &in; {@code Pr( L <= u <= U ) >= p } 
+	 */
+	public static double[] bounds( int n, double p, double u, double o ) {
+		if ( n < 2 ) {
+			throw new IllegalArgumentException();
+		}
+		if ( p < 0 || p > 1 ) {
+			throw new IllegalArgumentException();
+		}
+		if ( o < 0 ) {
+			throw new IllegalArgumentException();
+		}
+		double sqrt_n = Math.sqrt( (double)n );
+		double t = inv( n, p );
+		double L = u - o / sqrt_n * t;
+		double U = u + o / sqrt_n * t;
+		return new double[] { L, U };
+	}
+	/**
+	 * <p>Test sample statistics for a given confidence level, assuming that the
+	 * random variable they approximately describe is {@link Normal}.</p>
+	 * @param n sample size such that there are {@code n-1} degrees of freedom. {@code 2 <= n}
+	 * @param p level of confidence. {@code 0 <= p <= 1}
+	 * @param u sample mean.
+	 * @param o sample variance.
+	 * @return {@code [ L, U ]} &in; {@code Pr( L <= u <= U ) >= p }
+	 */
+	public static boolean test( int n, double p, double u, double o ) {
+		double[] bounds = bounds( n, p, u, o );
+		double L = bounds[0];
+		double U = bounds[1];
+		return u >= L && u <= U;
 	}
 }
