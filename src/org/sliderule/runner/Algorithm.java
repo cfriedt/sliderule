@@ -60,13 +60,11 @@ class Algorithm {
  *############################################################################*/
 
 	static int euprod( int[] cardinality ) {
-		int result = 1;
-		for( int i=0; i < cardinality.length; result *= cardinality[ i ], i++ );
-		return result;
+		return euprod( cardinality, -1 );
 	}
-	static int euprod_omit( int[] cardinality, int index_to_omit ) {
+	static int euprod( int[] cardinality, int index_to_omit ) {
 		int result = 1;
-		for( int i=0; i < cardinality.length; result *= ( i <= index_to_omit ? 1 : cardinality[ i ] ), i++ );
+		for( int i=0; i < cardinality.length; result *= ( ( i <= index_to_omit || -1 == index_to_omit ) ? 1 : cardinality[ i ] ), i++ );
 		return result;
 	}
 
@@ -103,7 +101,7 @@ class Algorithm {
 
 		for( int col=0; col < ncols; col++ ) {
 			int val = 0;
-			int reps = euprod_omit( cardinality, col );
+			int reps = euprod( cardinality, col );
 			for( int row=0; row < nrows; row++ ) {
 				param_values[ row ][ col ] = values[ col ].get( val );
 				if ( 0 == ( (row+1) % reps ) ) {
@@ -163,9 +161,9 @@ class Algorithm {
 				}
 				
 				// execute the MicroBenchmarks
-				for( Method m: k.getBenchmarkMethods() ) {
-					r = m.invoke( o, N_WARMUP_REPS );
-				}
+//				for( Method m: k.getBenchmarkMethods() ) {
+//					r = m.invoke( o, N_WARMUP_REPS );
+//				}
 				
 				// execute the MacroBenchmarks
 				for( Method m: k.getMacrobenchmarkMethods() ) {
@@ -190,7 +188,7 @@ class Algorithm {
 	private void markMacro( AnnotatedClass k, Object o, Method m, int param_set )
 	throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
 	{
-		throw new UnsupportedOperationException();
+		//throw new UnsupportedOperationException();
 	}
 
 	private void markMicro( AnnotatedClass k, Object o, Method m, int param_set )
@@ -200,9 +198,6 @@ class Algorithm {
 		long trial_end_ns;
 		long trial_start_ms;
 
-		// we make the wild assumption that 
-		final int N_SAVED_SAMPLES = 3;
-
 		int n = 0;
 		double mean_ns = 0;
 		double variance_ns = 0;
@@ -210,60 +205,58 @@ class Algorithm {
 
 		ArrayList<Trial> trials = new ArrayList<Trial>();
 
-		for( int reps = 10; reps < 1000000000; reps *= 10 ) {
+		// warm-up
+		m.invoke( o, N_WARMUP_REPS );
+		
+		for( int reps = 32, trial = 0; reps < 10000000 && trial < arguments.trials; reps <<= 1, trial++ ) {
 
-			for( int rep=0; rep<reps; rep++ ) {
+			SimpleTrial st = new SimpleTrial( k.getAnnotatedClass(), m, param_fields, param_values[ param_set ] );
 
-				SimpleTrial st = new SimpleTrial( k.getAnnotatedClass(), m, param_fields, param_values[ param_set ] );
-
-				for( Method b4: k.getBeforeRepMethods() ) {
-					b4.invoke( o );
-				}
-
-				trial_start_ms = System.currentTimeMillis();
-				trial_start_ns = System.nanoTime();
-
-				m.invoke( o );
-
-				trial_end_ns = System.nanoTime();
-
-				for( Method aft: k.getAfterRepMethods() ) {
-					aft.invoke( o );
-				}
-
-				// statistical calculations derived from "numerically stable algorithm"
-				// http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Online_algorithm
-				n += 1;
-				long x = elapsed( trial_start_ns, trial_end_ns );
-				double delta = ( (double) x ) - mean_ns;
-				mean_ns += delta / n;
-				M2 += delta * ( (double)x - mean_ns );
-				if ( n >= 2 ) {
-					variance_ns += M2 / n - 1;
-				}
-
-				SimpleMeasurement mean_ns_measurement = new SimpleMeasurement( "mean_ns", new PolymorphicType( double.class, mean_ns ) );
-				SimpleMeasurement variance_ns_measurement = new SimpleMeasurement( "variance_ns", new PolymorphicType( double.class, variance_ns ) );
-
-				st.addMeasurement( mean_ns_measurement );
-				st.addMeasurement( variance_ns_measurement );
-
-				SimpleMeasurement rep_measurement = new SimpleMeasurement( "rep", new PolymorphicType( int.class, rep ) );
-				SimpleMeasurement trial_start_ms_measurement = new SimpleMeasurement( "trial_start_ms", new PolymorphicType( long.class, trial_start_ms ) );
-				SimpleMeasurement trial_start_ns_measurement = new SimpleMeasurement( "trial_start_ns", new PolymorphicType( long.class, trial_start_ns ) );
-				SimpleMeasurement trial_end_ns_measurement = new SimpleMeasurement( "trial_end_ns", new PolymorphicType( long.class, trial_end_ns ) );
-
-				st.addMeasurement( rep_measurement );
-				st.addMeasurement( trial_start_ms_measurement );
-				st.addMeasurement( trial_start_ns_measurement );
-				st.addMeasurement( trial_end_ns_measurement );
-
-				context.results_processor.processTrial( st );
-
-				trials.add( st );
+			for( Method b4: k.getBeforeRepMethods() ) {
+				b4.invoke( o );
 			}
-			
-			break;
+
+			trial_start_ms = System.currentTimeMillis();
+			trial_start_ns = System.nanoTime();
+
+			m.invoke( o, reps );
+
+			trial_end_ns = System.nanoTime();
+
+			for( Method aft: k.getAfterRepMethods() ) {
+				aft.invoke( o );
+			}
+
+			// statistical calculations derived from "numerically stable algorithm"
+			// http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Online_algorithm
+			n += 1;
+			long x = elapsed( trial_start_ns, trial_end_ns );
+			double delta = ( (double) x ) - mean_ns;
+			mean_ns += delta / n;
+			M2 += delta * ( (double)x - mean_ns );
+			if ( n >= 2 ) {
+				variance_ns += M2 / n - 1;
+			}
+
+			SimpleMeasurement mean_ns_measurement = new SimpleMeasurement( "mean_ns", new PolymorphicType( double.class, mean_ns ) );
+			SimpleMeasurement variance_ns_measurement = new SimpleMeasurement( "variance_ns", new PolymorphicType( double.class, variance_ns ) );
+
+			st.addMeasurement( mean_ns_measurement );
+			st.addMeasurement( variance_ns_measurement );
+
+			SimpleMeasurement rep_measurement = new SimpleMeasurement( "reps", new PolymorphicType( int.class, reps ) );
+			SimpleMeasurement trial_start_ms_measurement = new SimpleMeasurement( "trial_start_ms", new PolymorphicType( long.class, trial_start_ms ) );
+			SimpleMeasurement trial_start_ns_measurement = new SimpleMeasurement( "trial_start_ns", new PolymorphicType( long.class, trial_start_ns ) );
+			SimpleMeasurement trial_end_ns_measurement = new SimpleMeasurement( "trial_end_ns", new PolymorphicType( long.class, trial_end_ns ) );
+
+			st.addMeasurement( rep_measurement );
+			st.addMeasurement( trial_start_ms_measurement );
+			st.addMeasurement( trial_start_ns_measurement );
+			st.addMeasurement( trial_end_ns_measurement );
+
+			context.results_processor.processTrial( st );
+
+			trials.add( st );
 		}
 	}
 
