@@ -17,6 +17,6 @@
 package org.sliderule.model;
 
 public interface Measurement {
-	double value();
+	PolymorphicType value();
 	String description();
 }

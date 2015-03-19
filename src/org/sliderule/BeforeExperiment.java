@@ -37,5 +37,5 @@ public @interface BeforeExperiment {
    * method with {@code @BeforeExperiment(Benchmark.class)} will cause it to only run for
    * {@link Benchmark} experiments. By default, annotated methods run for all experiments.
    */
-  Class<? extends Annotation> value();
+  Class<? extends Annotation> value() default All.class;
 }

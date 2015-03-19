@@ -20,7 +20,7 @@ import java.lang.annotation.*;
 import java.lang.reflect.*;
 import java.util.*;
 
-class AnnotatedClass {
+public class AnnotatedClass {
 	private static final int FIELD_PARAM;
 
 	private static final int METHOD_AFTER_EXPERIMENT;
@@ -30,14 +30,14 @@ class AnnotatedClass {
 	private static final int METHOD_BEFORE_REP;
 	private static final int METHOD_MACROBENCHMARK;
 
-	private static final Map<Class<?>,Integer> field_map;
-	private static final Map<Class<?>,Integer> method_map;
+	private static final Map<Class<? extends Annotation>,Integer> field_map;
+	private static final Map<Class<? extends Annotation>,Integer> method_map;
 
 	static {
 		int field=0;
 		FIELD_PARAM = field++;
 
-		field_map = new HashMap<Class<?>,Integer>();
+		field_map = new HashMap<Class<? extends Annotation>,Integer>();
 		field_map.put( org.sliderule.Param.class, FIELD_PARAM );
 
 		int method=0;
@@ -48,7 +48,7 @@ class AnnotatedClass {
 		METHOD_BEFORE_REP = method++;
 		METHOD_MACROBENCHMARK = method++;
 
-		method_map = new HashMap<Class<?>,Integer>();
+		method_map = new HashMap<Class<? extends Annotation>,Integer>();
 		method_map.put( org.sliderule.AfterExperiment.class, METHOD_AFTER_EXPERIMENT );
 		method_map.put( org.sliderule.BeforeExperiment.class, METHOD_BEFORE_EXPERIMENT );
 		method_map.put( org.sliderule.Benchmark.class, METHOD_BENCHMARK );
@@ -72,42 +72,64 @@ class AnnotatedClass {
 		for( int i=0; i < method_array.length; i++ ) {
 			method_array[i] = new HashSet<Method>();
 		}
+
+		ArrayList<Field> fs = new ArrayList<Field>();
+		fs.addAll( Arrays.asList( klass.getFields() ) );
+		fs.addAll( Arrays.asList( klass.getDeclaredFields() ) );
+
+		for( Field f: fs ) {
+			f.setAccessible( true );
+			filterField( f );
+		}
+
+		ArrayList<Method> ms = new ArrayList<Method>();
+		ms.addAll( Arrays.asList( klass.getMethods() ) );
+		ms.addAll( Arrays.asList( klass.getDeclaredMethods() ) );
+
+		for( Method m: ms ) {
+			m.setAccessible( true );
+			filterMethod( m );
+		}
 	}
 
 	public Class<?> getAnnotatedClass() {
 		return klass;
 	}
-	
+
 	@SuppressWarnings("unchecked")
-	public void filterField( Field f ) {
-		List<Annotation> anna;
-		
-		for( Map.Entry<Class<?>,Integer> e: field_map.entrySet() ) {
-			Class<Annotation> klass = (Class<Annotation>) e.getKey();
+	private <T extends Annotation> void filterMember( Object o ) {
+		List<T> anna;
+		boolean is_field;
+		if ( o instanceof Field ) {
+			is_field = true;
+		} else if ( o instanceof Method ) {
+			is_field = false;
+		} else {
+			throw new IllegalArgumentException();
+		}
+		Map<Class<? extends Annotation>,Integer> map = is_field ? field_map : method_map;
+		for( Map.Entry<Class<? extends Annotation>,Integer> e: map.entrySet() ) {
+			Class<? extends Annotation> klass = e.getKey();
 			int val = (int)(Integer)e.getValue();
-			anna = new ArrayList<Annotation>();
-			anna.addAll( Arrays.asList( getAnnotationsByType( f, klass ) ) );
-			anna.addAll( Arrays.asList( getDeclaredAnnotationsByType( f, klass ) ) );
+			anna = new ArrayList<T>();
+			anna.addAll( (Collection<? extends T>) Arrays.asList( getAnnotationsByType( o, klass ) ) );
+			anna.addAll( (Collection<? extends T>) Arrays.asList( getDeclaredAnnotationsByType( o, klass ) ) );
 			if ( ! anna.isEmpty() ) {
-				field_array[ val ].add( f );
+				if ( is_field ) {
+					field_array[ val ].add( (Field) o );
+				} else {
+					method_array[ val ].add( (Method) o );
+				}
 			}
 		}
 	}
 
-	@SuppressWarnings("unchecked")
-	public void filterMethod( Method m ) {
-		List<Annotation> anna;
-		
-		for( Map.Entry<Class<?>,Integer> e: method_map.entrySet() ) {
-			Class<Annotation> klass = (Class<Annotation>) e.getKey();
-			int val = (int)(Integer)e.getValue();
-			anna = new ArrayList<Annotation>();
-			anna.addAll( Arrays.asList( getAnnotationsByType( m, klass ) ) );
-			anna.addAll( Arrays.asList( getDeclaredAnnotationsByType( m, klass ) ) );
-			if ( ! anna.isEmpty() ) {
-				method_array[ val ].add( m );
-			}
-		}
+	private <T extends Annotation> void filterField( Field f ) {
+		filterMember( f );
+	}
+
+	private <T extends Annotation> void filterMethod( Method m ) {
+		filterMember( m );
 	}
 
 
@@ -123,6 +145,7 @@ class AnnotatedClass {
 		} else {
 			throw new IllegalArgumentException();
 		}
+
 		ArrayList<T> ala = new ArrayList<T>();
 		for( T an: a ) {
 			Class<? extends Annotation> ant = an.annotationType();
@@ -130,16 +153,20 @@ class AnnotatedClass {
 				ala.add( (T) an );
 			}
 		}
-		return ala.toArray( a );
+		T[] r = ala.toArray( a );
+		if ( 1 == r.length && null == r[0] ) {
+			r = (T[]) Array.newInstance( klass, 0 );
+		}
+		return r;
 	}
-	private static <T extends Annotation> T[] getAnnotationsByType( Object o, Class<T> klass ) {
+	static <T extends Annotation> T[] getAnnotationsByType( Object o, Class<T> klass ) {
 		return getAnnotations( false, o, klass );
 	}
-	private static <T extends Annotation> T[] getDeclaredAnnotationsByType( Object o, Class<T> klass ) {
+	static <T extends Annotation> T[] getDeclaredAnnotationsByType( Object o, Class<T> klass ) {
 		return getAnnotations( true, o, klass );
 	}
 
-	public Set<Field>  getParamFields() {
+	public Set<Field> getParamFields() {
 		return field_array[ FIELD_PARAM ];
 	}
 

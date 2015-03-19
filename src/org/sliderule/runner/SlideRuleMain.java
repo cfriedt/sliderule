@@ -24,7 +24,7 @@ public final class SlideRuleMain {
 	private SlideRuleMain() {}
 	private Arguments arguments = new Arguments();
 	private Context context = new Context();
-	
+
 	@SuppressWarnings("serial")
 	private static class HelpException extends Exception {}
 	@SuppressWarnings("serial")
@@ -49,7 +49,7 @@ public final class SlideRuleMain {
 	}
 	@SuppressWarnings("serial")
 	private static class NonUniformBenchmarkClassesException extends Exception {}
-	
+
 	private void parseArguments( String[] arg )
 	throws SpecificMissingArgumentException, SpecificIllegalArgumentException, SpecificFileNotFoundException, SpecificIllegalPropertyException, SpecificClassNotFoundException, HelpException
 	{
@@ -194,6 +194,8 @@ public final class SlideRuleMain {
 				// The only arguments that can appear now are names of classes.
 				// Each class must be uniform with the others in terms of annotations.
 				// It helps if all test classes extend one common base class.
+				// That is basically equivalent to lumping all tests into one class
+				// and having a separate "subject" class instantiated in BeforeExperiment.
 				Class<?> klass;
 				try {
 					klass = cl.loadClass( arg[i] );
@@ -211,7 +213,7 @@ public final class SlideRuleMain {
 		if ( a.size() != b.size() ) {
 			return false;
 		}
-		// FIXME: verify field types 
+		// FIXME: verify field types
 		for( Field f: a) {
 			boolean found = false;
 			for( Field g: b ) {
@@ -231,7 +233,7 @@ public final class SlideRuleMain {
 		if ( a.size() != b.size() ) {
 			return false;
 		}
-		// FIXME: verify field types 
+		// FIXME: verify field types
 		for( Method f: a) {
 			boolean found = false;
 			for( Method g: b ) {
@@ -251,33 +253,15 @@ public final class SlideRuleMain {
 	throws NonUniformBenchmarkClassesException
 	{
 		AnnotatedClass prev_ac = null;
-		
+
 		for( Class<?> klass: arguments.bench_classes ) {
 
 			AnnotatedClass ac = new AnnotatedClass( klass );
 
-			ArrayList<Field> fs = new ArrayList<Field>();
-			fs.addAll( Arrays.asList( klass.getFields() ) );
-			fs.addAll( Arrays.asList( klass.getDeclaredFields() ) );
-
-			for( Field f: fs ) {
-				f.setAccessible( true );
-				ac.filterField( f );
-			}
-
-			ArrayList<Method> ms = new ArrayList<Method>();
-			ms.addAll( Arrays.asList( klass.getMethods() ) );
-			ms.addAll( Arrays.asList( klass.getDeclaredMethods() ) );
-
-			for( Method m: ms ) {
-				m.setAccessible( true );
-				ac.filterMethod( m );
-			}
-			
 			if ( null == prev_ac ) {
-				if ( ! ac.getBenchmarkMethods().isEmpty() ) {
+				if ( ! ( ac.getBenchmarkMethods().isEmpty() && ac.getMacrobenchmarkMethods().isEmpty() ) ) {
 					prev_ac = ac;
-					context.addAnnotatedClass( ac );	
+					context.addAnnotatedClass( ac );
 				}
 			} else {
 				if ( !(
@@ -295,7 +279,7 @@ public final class SlideRuleMain {
 		}
 	}
 	private void go()
-	throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
+	throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, InterruptedException
 	{
 		Algorithm.evaluate( arguments, context );
 	}
@@ -326,16 +310,14 @@ public final class SlideRuleMain {
 		} catch ( NonUniformBenchmarkClassesException e ) {
 			System.err.println( "benchmark classes must be uniform when trying to compare multiple benchmark classes" );
 		} catch ( InstantiationException e ) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch ( IllegalAccessException e ) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch ( IllegalArgumentException e ) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch ( InvocationTargetException e ) {
-			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch ( InterruptedException e ) {
 			e.printStackTrace();
 		}
 		if ( 0 != return_val || srm.arguments.help ) {
