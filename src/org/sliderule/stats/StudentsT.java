@@ -18,7 +18,7 @@ package org.sliderule.stats;
 
 /**
  * <p><b>Student's <i>t</i>-Distribution</b></p>
- * 
+ *
  * <p>This class provides a time-efficient means for querying values and
  * inverse values from the
  * <a href="http://en.wikipedia.org/wiki/Cumulative_distribution_function">cumulative distribution function (CDF)</a>
@@ -28,7 +28,7 @@ package org.sliderule.stats;
  * <a href="http://en.wikipedia.org/wiki/Confidence_interval">confidence interval</a>
  * as well as a method to {@link #test} sample statistics - i.e. perform
  * <a href="http://en.wikipedia.org/wiki/Student's_t-test">Student's <i>t</i>-test</a>.</p>
- * 
+ *
  * <p>Note, the {@link #test} is not sufficient to show that the random
  * variable approximately described by sample statistics is actually
  * {@link Normal}.
@@ -40,7 +40,7 @@ package org.sliderule.stats;
  *     <li>Wikipedia: <a href="http://en.wikipedia.org/wiki/Student%27s_t-distribution">Student's t-distribution</a></li>
  *     <li>Chapra, Steven C., and Canale, Raymond P. Numerical Methods for Engineers, 4th Ed. Toronto: McGraw-Hill, 2002. pp 435. Print.</li>
  *     <li>DeGroot, Morris H., and Schervish, Mark J. Probability and Statistics, 3rd Ed. Toronto: Addison-Wesley, 2002. pp. 404-416,776-777. Print.</li>
- *   </ul> 
+ *   </ul>
  */
 public final class StudentsT {
 	// produced via Matlab's tinv function
@@ -167,12 +167,12 @@ public final class StudentsT {
 		{ 0.125930, 0.253914, 0.386252, 0.525808, 0.676557, 0.844652, 1.040970, 1.288706, 1.657759, 1.980100, 2.358093, 2.617776,  },
 		{ 0.125928, 0.253910, 0.386244, 0.525796, 0.676540, 0.844627, 1.040932, 1.288646, 1.657651, 1.979930, 2.357825, 2.617421,  },
 	};
-	
+
 	private StudentsT() {}
 
 	/**
 	 * Evaluate the cumulative distribution function of the {@link StudentsT}
-	 * distribution. 
+	 * distribution.
 	 * @param n sample size such that there are {@code n-1} degrees of freedom. {@code 2 <= n}
 	 * @param x value of random variable {@code X}
 	 * @return {@code p = Pr( X <= x | n-1 )}
@@ -183,7 +183,7 @@ public final class StudentsT {
 		}
 		// values converge after this point
 		n = ( n >= xtable.length - 1 ) ? xtable.length - 1 : n;
-		
+
 		// Use symmetry property rather than double size of xtable
 		boolean negative = x < 0;
 		x = negative ? -x : x;
@@ -193,7 +193,7 @@ public final class StudentsT {
 		int i=0;
 		for( double xx: xrow ) {
 			if ( xx < x ) {
-				double alpha = 2 * ( 1 - xp[ i ] ); 
+				double alpha = 2 * ( 1 - xp[ i ] );
 				r = 1 - alpha;
 				i++;
 			} else {
@@ -220,7 +220,7 @@ public final class StudentsT {
 		}
 		// values converge after this point
 		n = ( n >= xtable.length - 1 ) ? xtable.length - 1 : n;
-		
+
 		double r = 0;
 		boolean negative = p < 0.50;
 		double alpha = negative ? p : ( 1D - p );
@@ -238,12 +238,12 @@ public final class StudentsT {
 	}
 	/**
 	 * Determine the confidence interval for sample statistics, assuming that
-	 * the random variable they approximately describe is {@link Normal}.   
+	 * the random variable they approximately describe is {@link Normal}.
 	 * @param n sample size such that there are {@code n-1} degrees of freedom. {@code 2 <= n}
 	 * @param p level of confidence. {@code 0 <= p <= 1}
 	 * @param u sample mean.
 	 * @param o sample variance.
-	 * @return {@code [ L, U ]} &in; {@code Pr( L <= u <= U ) >= p } 
+	 * @return {@code [ L, U ]} &in; {@code Pr( L <= u <= U ) >= p }
 	 */
 	public static double[] bounds( int n, double p, double u, double o ) {
 		if ( n < 2 ) {

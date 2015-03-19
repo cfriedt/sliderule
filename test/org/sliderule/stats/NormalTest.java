@@ -29,7 +29,7 @@ public class NormalTest {
 		double expected_confidence;
 		double actual_confidence;
 		double epsilon = 0.0001;
-		
+
 		n = 8;
 		x = 0.5;
 		expected_confidence = 0.691462;
@@ -67,7 +67,7 @@ public class NormalTest {
 		double epsilon = 0.01;
 		double expected_variable;
 		double actual_variable;
-		
+
 		n = 8;
 		p = 0.691462;
 		expected_variable = 0.5;
@@ -108,8 +108,8 @@ public class NormalTest {
 		double actual_variable;
 		double confidence_epsilon = 0.001;
 		double variable_epsilon = 0.00001;
-		
-		// first, test inv( cdf( X ) ) = X 
+
+		// first, test inv( cdf( X ) ) = X
 		n = 8;
 		expected_variable = 2.364624;
 		actual_variable = Normal.inv( n, Normal.cdf( n, expected_variable ) );

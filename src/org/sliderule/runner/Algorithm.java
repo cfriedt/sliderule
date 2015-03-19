@@ -54,7 +54,7 @@ class Algorithm {
 			System.out.println( "" + o );
 		}
 	}
-	
+
 /*############################################################################
  *                         Setup Code
  *############################################################################*/
@@ -73,14 +73,14 @@ class Algorithm {
 	throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
 	{
 		int np = param_fields.length;
-		
+
 		Class<?>[] type = new Class<?>[ np ];
 		ArrayList<PolymorphicType>[] values = new ArrayList[ np ];
 		int[] cardinality = new int[ np ];
 
 		// calculate the number of permutations, record cardinality of each param
 		for( int i=0; i < np; i++ ) {
-			
+
 			Field f = param_fields[ i ];
 
 			type[ i ] = f.getType();
@@ -94,7 +94,7 @@ class Algorithm {
 			}
 			cardinality[ i ] = value_string.size();
 		}
-		
+
 		int nrows = euprod( cardinality );
 		int ncols = cardinality.length;
 		param_values = new PolymorphicType[ nrows ][ ncols ];
@@ -121,7 +121,7 @@ class Algorithm {
 			ClassAndInstance cai = new ClassAndInstance( ac, o );
 			alcai.add( cai );
 		}
-		
+
 		AnnotatedClass proto;
 		proto = alcai.get( 0 ).klass;
 		ArrayList<Field> alf = new ArrayList<Field>();
@@ -131,40 +131,40 @@ class Algorithm {
 		// generate the euclidian parameter space
 		permute();
 	}
-	
+
 /*############################################################################
  *                         Warm-up the JVM (trigger JIT)
  *############################################################################*/
-	
+
 	// TODO: programatically find the JMX value for -XX:CompileThreshold=N
 	private static final int N_WARMUP_REPS = 10000;
 	private static final int N_MACRO_WARMUP_REPS = 10;
-	
+
 	private void warmUp()
 	throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
 	{
 		D( "starting warm-up" );
-		
+
 		Object r;
 		for( ClassAndInstance cai: alcai ) {
-			
+
 			AnnotatedClass k = cai.klass;
 			Object o = cai.instance;
-			
+
 			for( int row=0; row < param_values.length; row++ ) {
-				
+
 				// set all parameters for a specific trial
 				for( int col=0; col < param_values[ row ].length; col++ ) {
 					Field f = param_fields[ col ];
-					PolymorphicType pmt = param_values[ row ][ col ]; 
+					PolymorphicType pmt = param_values[ row ][ col ];
 					f.set( o, pmt.value );
 				}
-				
+
 				// execute the MicroBenchmarks
 //				for( Method m: k.getBenchmarkMethods() ) {
 //					r = m.invoke( o, N_WARMUP_REPS );
 //				}
-				
+
 				// execute the MacroBenchmarks
 				for( Method m: k.getMacrobenchmarkMethods() ) {
 					for( int i=0; i<N_MACRO_WARMUP_REPS; i++ ) {
@@ -173,14 +173,14 @@ class Algorithm {
 				}
 			}
 		}
-		
+
 		D( "finished warm-up\n" );
 	}
 
 /*############################################################################
  *                         Execute Benchmarks
  *############################################################################*/
-	
+
 	private static long elapsed( long start, long end ) {
 		return end - start;
 	}
@@ -207,7 +207,7 @@ class Algorithm {
 
 		// warm-up
 		m.invoke( o, N_WARMUP_REPS );
-		
+
 		for( int reps = 32, trial = 0; reps < 10000000 && trial < arguments.trials; reps <<= 1, trial++ ) {
 
 			SimpleTrial st = new SimpleTrial( k.getAnnotatedClass(), m, param_fields, param_values[ param_set ] );
@@ -269,7 +269,7 @@ class Algorithm {
 			markMicro( k, o, m, param_set );
 		}
 	}
-	
+
 	private void bench()
 	throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
 	{
@@ -280,7 +280,7 @@ class Algorithm {
 			Object o = cai.instance;
 
 			for( int row=0; row < param_values.length; row++ ) {
-				
+
 				// set all parameters for a specific set of trials
 				for( int col=0; col < param_values[ row ].length; col++ ) {
 					Field f = param_fields[ col ];
@@ -288,27 +288,27 @@ class Algorithm {
 				}
 
 				try {
-				
-					// allow the benchmarking class to perform some misc tasks before executing a set of trials 
+
+					// allow the benchmarking class to perform some misc tasks before executing a set of trials
 					for( Method m: k.getBeforeExperimentMethods() ) {
 						m.invoke( o );
 					}
-	
+
 					// perform micro benchmarking (slightly more complicated than macrobenchmarking)
 					for( Method m: k.getBenchmarkMethods() ) {
 						mark( false, k, o, m, row );
 					}
-					
+
 					// perform macro benchmarking
 					for( Method m: k.getMacrobenchmarkMethods() ) {
 						mark( true, k, o, m, row );
 					}
-	
-					// allow the benchmarking class to perform some misc tasks before executing a set of trials 
+
+					// allow the benchmarking class to perform some misc tasks before executing a set of trials
 					for( Method m: k.getAfterExperimentMethods() ) {
 						m.invoke( o );
 					}
-				
+
 				} catch( SkipThisScenarioException e ) {
 					continue;
 				}
@@ -318,9 +318,9 @@ class Algorithm {
 	}
 
 /*############################################################################
- *                         Single Point of Entry 
+ *                         Single Point of Entry
  *############################################################################*/
-	
+
 	public static void evaluate( Arguments a, Context c )
 	throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, InterruptedException
 	{

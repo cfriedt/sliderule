@@ -14,7 +14,7 @@ final class SimpleTrial implements Trial {
 
 	private final UUID id;
 	private final ArrayList<Measurement> measurements;
-	
+
 	public SimpleTrial(  Class<?> bench_class, Method method, Field[] param, PolymorphicType[] param_value )
 	{
 		this.bench_class = bench_class;

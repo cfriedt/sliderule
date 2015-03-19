@@ -24,7 +24,7 @@ class Context {
 
 	final HashSet<AnnotatedClass> bench_classes;
 	final ResultProcessor results_processor;
-	
+
 	public Context() {
 		bench_classes = new HashSet<AnnotatedClass>();
 		results_processor = new ConsoleResultProcessor();

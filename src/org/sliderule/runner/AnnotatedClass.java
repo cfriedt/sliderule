@@ -72,7 +72,7 @@ public class AnnotatedClass {
 		for( int i=0; i < method_array.length; i++ ) {
 			method_array[i] = new HashSet<Method>();
 		}
-		
+
 		ArrayList<Field> fs = new ArrayList<Field>();
 		fs.addAll( Arrays.asList( klass.getFields() ) );
 		fs.addAll( Arrays.asList( klass.getDeclaredFields() ) );

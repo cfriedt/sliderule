@@ -195,7 +195,7 @@ public final class SlideRuleMain {
 				// Each class must be uniform with the others in terms of annotations.
 				// It helps if all test classes extend one common base class.
 				// That is basically equivalent to lumping all tests into one class
-				// and having a separate "subject" class instantiated in BeforeExperiment. 
+				// and having a separate "subject" class instantiated in BeforeExperiment.
 				Class<?> klass;
 				try {
 					klass = cl.loadClass( arg[i] );

@@ -18,7 +18,7 @@ package org.sliderule.stats;
 
 /**
  * <p><b>&Chi;&sup2; Distribution</b></p>
- * 
+ *
  * <p>This class provides a time-efficient means for querying values and
  * inverse values from the
  * <a href="http://en.wikipedia.org/wiki/Cumulative_distribution_function">cumulative distribution function (CDF)</a>
@@ -33,17 +33,17 @@ package org.sliderule.stats;
  * to a particular distribution - i.e. to perform a
  * <a href="http://en.wikipedia.org/wiki/Chi-square_test">&Chi;&sup2; test</a></p>
  * </p>
- * 
+ *
  * @author <a href="mailto:chrisfriedt@gmail.com">Christopher Friedt</a>
  * @see
  *   <ul>
  *     <li>Wikipedia: <a href=""http://en.wikipedia.org/wiki/Chi-squared_distribution">Student's t-distribution</a></li>
  *     <li>DeGroot, Morris H., and Schervish, Mark J. Probability and Statistics, 3rd Edition. Toronto: Addison-Wesley, 2002. pp. 393-404, 776-777. Print.</li>
- *   </ul> 
+ *   </ul>
  *
  */
 public final class ChiSquared {
-	
+
 	private static final double[] xp = { 0.005, 0.01, 0.025, 0.05, 0.1, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.75, 0.8, 0.9, 0.95, 0.975, 0.99, 0.995, };
 	// generated via Matlab's chi2inv function
 	private static final double[][] xtable = {
@@ -149,12 +149,12 @@ public final class ChiSquared {
 		{ 66.510105, 69.229890, 73.361080, 77.046332, 81.449253, 87.005212, 89.181215, 91.166265, 94.825885, 98.334137, 101.927923, 105.868454, 108.093259, 110.606847, 117.406883, 123.225221, 128.421989, 134.641617, 138.986783,  },
 		{ 67.327563, 70.064895, 74.221927, 77.929465, 82.358136, 87.945336, 90.133220, 92.128944, 95.807848, 99.334129, 102.945944, 106.905761, 109.141241, 111.666713, 118.498004, 124.342113, 129.561197, 135.806723, 140.169489,  },
 	};
-	
+
 	private ChiSquared() {}
 
 	/**
 	 * Evaluate the cumulative distribution function of the {@link ChiSquared}
-	 * distribution. 
+	 * distribution.
 	 * @param n sample size such that there are {@code n-1} degrees of freedom. {@code 2 <= n}
 	 * @param x value of random variable {@code X}
 	 * @return {@code p = Pr( X <= x | n-1 )}
@@ -198,7 +198,7 @@ public final class ChiSquared {
 		}
 		// values converge after this point
 		n = ( n >= xtable.length - 1 ) ? xtable.length - 1 : n;
-		
+
 		double r = 0;
 		double pvalue = p;
 		double[] xrow = xtable[ n - 2 ];
@@ -213,7 +213,7 @@ public final class ChiSquared {
 		r = xrow[ i ];
 		return r;
 	}
-	
+
 	public static int minSamples( double q, double p ) {
 		if ( p <= 0 || p >= 1 ) {
 			throw new IllegalArgumentException();
@@ -237,7 +237,7 @@ public final class ChiSquared {
 		}
 		return n;
 	}
-	
+
 	/**
 	 * Perform a &Chi;&sup2; test to determine if the sampled values,
 	 * {@code h}, are a good fit for the prototypical distribution,
@@ -246,7 +246,7 @@ public final class ChiSquared {
 	 * is that the distribution is not a good fit.
 	 * @param proto a reference distribution of the random variable {@code X}
 	 * @param h data sampled from the random variable {@code X}
-	 * @return true if the null hypothesis is invalid - i.e. if {@code proto} is a good fit for {@code h} 
+	 * @return true if the null hypothesis is invalid - i.e. if {@code proto} is a good fit for {@code h}
 	 */
 	// remember, when comparing arbitrary (nonstandard) normal distributions, divide by sigma^2
 	public static boolean test( double confidence, double[] proto, double[] h ) {

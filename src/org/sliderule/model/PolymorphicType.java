@@ -64,6 +64,6 @@ public final class PolymorphicType {
 
 	@Override
 	public String toString() {
-		return "" + klass + ":" + ( null == value ? "(null)" : "" + value ); 
+		return "" + klass + ":" + ( null == value ? "(null)" : "" + value );
 	}
 }

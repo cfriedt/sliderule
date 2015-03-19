@@ -29,7 +29,7 @@ public class ChiSquaredTest {
 		double expected_confidence;
 		double actual_confidence;
 		double epsilon = 0.01;
-		
+
 		n = 8;
 		x = 14.067140;
 		expected_confidence = 0.95;
@@ -49,7 +49,7 @@ public class ChiSquaredTest {
 		double expected_variable;
 		double actual_variable;
 		double epsilon = 0.00001;
-		
+
 		n = 8;
 		confidence = 0.95;
 		expected_variable = 14.067140;
@@ -71,8 +71,8 @@ public class ChiSquaredTest {
 		double actual_variable;
 		double confidence_epsilon = 0.001;
 		double variable_epsilon = 0.00001;
-		
-		// first, test inv( cdf( X ) ) = X 
+
+		// first, test inv( cdf( X ) ) = X
 		n = 8;
 		expected_variable = 14.067140;
 		actual_variable = ChiSquared.inv( n, ChiSquared.cdf( n, expected_variable ) );
@@ -87,7 +87,7 @@ public class ChiSquaredTest {
 	public void minSamples() {
 		// example is right out of DeGroot, but DeGroot is completely wrong
 		// p1 = Pr( |U| < 1/5 * sqrt( 21 ) ) = 0.8203 => DeGroot says this should be 0.64
-		// p2 = Pr( (1-q)^2 * 21 < V < (1+q)^2 * 21 ) = 0.654 => DeGroot says this should be 0.78 
+		// p2 = Pr( (1-q)^2 * 21 < V < (1+q)^2 * 21 ) = 0.654 => DeGroot says this should be 0.78
 		double p = 1D / 2D;
 		double q = 1D / 5D;
 		int expected_n = 14;

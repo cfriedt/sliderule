@@ -6,7 +6,7 @@ final class SimpleMeasurement implements Measurement {
 
 	private final String description;
 	private final PolymorphicType value;
-	
+
 	public SimpleMeasurement( String description, PolymorphicType value ) {
 		this.description = description;
 		this.value = value;

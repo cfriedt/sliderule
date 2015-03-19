@@ -31,7 +31,7 @@ public class StudentsTTest {
 		double expected_confidence;
 		double actual_confidence;
 		double epsilon = 0.01;
-		
+
 		n = 8;
 		x = 2.364624;
 		expected_confidence = 0.95;
@@ -51,7 +51,7 @@ public class StudentsTTest {
 		double expected_variable;
 		double actual_variable;
 		double epsilon = 0.00001;
-		
+
 		n = 8;
 		confidence = 0.95;
 		expected_variable = 2.364624;
@@ -73,8 +73,8 @@ public class StudentsTTest {
 		double actual_variable;
 		double confidence_epsilon = 0.001;
 		double variable_epsilon = 0.00001;
-		
-		// first, test inv( cdf( X ) ) = X 
+
+		// first, test inv( cdf( X ) ) = X
 		n = 8;
 		expected_variable = 2.364624;
 		actual_variable = StudentsT.inv( n, StudentsT.cdf( n, expected_variable ) );
@@ -102,7 +102,7 @@ public class StudentsTTest {
 		assertEquals( "actual_bounds[0] == " + expected_bounds[0], expected_bounds[0], actual_bounds[0], epsilon_bounds );
 		assertEquals( "actual_bounds[1] == " + expected_bounds[1], expected_bounds[1], actual_bounds[1], epsilon_bounds );
 		boolean expected_pass = true;
-		boolean actual_pass = StudentsT.test( n, confidence, u, o ); 
+		boolean actual_pass = StudentsT.test( n, confidence, u, o );
 		assertEquals( "mean of " + u + " is possible with " + confidence + " confidence", expected_pass, actual_pass );
 	}
 }
