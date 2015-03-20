@@ -136,9 +136,25 @@ class Algorithm {
  *                         Warm-up the JVM (trigger JIT)
  *############################################################################*/
 
-	// TODO: programatically find the JMX value for -XX:CompileThreshold=N
-	private static final int N_WARMUP_REPS = 10000;
+	private static final int N_WARMUP_REPS;
 	private static final int N_MACRO_WARMUP_REPS = 10;
+
+	static {
+		int n_warmup_reps = 10;
+		try {
+			if ( VM.getUseCompiler() ) {
+				n_warmup_reps += VM.getCompileThreshold();
+				if ( VM.getTieredCompilation() ) {
+					n_warmup_reps += VM.getTier2CompileThreshold();
+				}
+			}
+			if ( VM.getInline() ) {
+				n_warmup_reps += VM.getMinInliningThreshold();
+			}
+		} catch ( Throwable t ) {
+		}
+		N_WARMUP_REPS = n_warmup_reps;
+	}
 
 	private void warmUp()
 	throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
