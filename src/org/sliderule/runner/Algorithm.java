@@ -22,8 +22,23 @@ import java.util.*;
 import org.sliderule.*;
 import org.sliderule.api.*;
 import org.sliderule.model.*;
+import org.sliderule.stats.*;
 
 class Algorithm {
+
+	// We make the assumption (yes, I know) that our sampled random variable (execution time)
+	// will have a (non-standard) normal distribution. This is later validated using the
+	// Chi-Squared test.
+
+	// we want our accepted values for sample mean and sample variance to be within
+	// Q_ACCEPTANCE standard deviations from the mean.
+	static final double Q_ACCEPTANCE = 1 / 5D;
+
+	// we want our accepted values for sample mean and sample variance to have a
+	// confidence value of P_CONFIDENCE - i.e. there is ( 1 - P_CONFIDENCE ) chance for error.
+	static final double P_CONFIDENCE = 0.95;
+
+	final int MIN_TRIALS;
 
 	final Arguments arguments;
 	final Context context;
@@ -31,10 +46,19 @@ class Algorithm {
 	Field[] param_fields;
 	PolymorphicType[][] param_values;
 
+
 	private Algorithm( Arguments arguments, Context context ) {
 		this.arguments = arguments;
 		this.context = context;
 		this.alcai = new ArrayList<ClassAndInstance>();
+		MIN_TRIALS =
+			Math.max(
+				Math.max(
+					arguments.trials,
+					ChiSquared.minSamples( Q_ACCEPTANCE, P_CONFIDENCE )
+				),
+				OnlineStatistics.MIN_N_BEFORE_VALID_VARIANCE
+			);
 	}
 
 	private static class ClassAndInstance {
@@ -128,7 +152,7 @@ class Algorithm {
 		alf.addAll( proto.getParamFields() );
 		param_fields = alf.toArray( new Field[0] );
 
-		// generate the euclidian parameter space
+		// generate the Euclidean parameter space
 		permute();
 	}
 
@@ -172,70 +196,67 @@ class Algorithm {
 	private void markMicro( AnnotatedClass k, Object o, Method m, int param_set )
 	throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
 	{
+		final int Mi = (1 << 20);
 		long trial_start_ns;
 		long trial_end_ns;
+		long elapsed_ns;
 		long trial_start_ms;
 
-		int n = 0;
-		double mean_ns = 0;
-		double variance_ns = 0;
-		double M2 = 0;
+		// reuse this one over and over
+		OnlineStatistics ts = new OnlineStatistics();
 
 		ArrayList<Trial> trials = new ArrayList<Trial>();
 
 		// warm-up
 		m.invoke( o, N_WARMUP_REPS );
 
-		for( int reps = 32, trial = 0; reps < 10000000 && trial < arguments.trials; reps <<= 1, trial++ ) {
+		// proceed until the result of the trials is statistically significant
+		for( int trial=0; trial < MIN_TRIALS; trial++ ) {
 
 			SimpleTrial st = new SimpleTrial( k.getAnnotatedClass(), m, param_fields, param_values[ param_set ] );
 
-			for( Method b4: k.getBeforeExperimentMethods() ) {
-				b4.invoke( o );
+			for( int reps = 1; reps < 10 * Mi; reps <<= 1 ) {
+
+				for( Method b4: k.getBeforeExperimentMethods() ) {
+					b4.invoke( o );
+				}
+
+				trial_start_ms = System.currentTimeMillis();
+				trial_start_ns = System.nanoTime();
+
+				m.invoke( o, reps );
+
+				trial_end_ns = System.nanoTime();
+
+				for( Method aft: k.getAfterExperimentMethods() ) {
+					aft.invoke( o );
+				}
+
+				elapsed_ns = elapsed( trial_start_ns, trial_end_ns );
+				ts.update( elapsed_ns );
+
+				SimpleMeasurement mean_ns_measurement = new SimpleMeasurement( "mean_ns", new PolymorphicType( double.class, ts.getMean() ) );
+				SimpleMeasurement variance_ns_measurement = new SimpleMeasurement( "variance_ns", new PolymorphicType( double.class, ts.getVariance() ) );
+
+				st.addMeasurement( mean_ns_measurement );
+				st.addMeasurement( variance_ns_measurement );
+
+				SimpleMeasurement rep_measurement = new SimpleMeasurement( "reps", new PolymorphicType( int.class, reps ) );
+				SimpleMeasurement trial_start_ms_measurement = new SimpleMeasurement( "trial_start_ms", new PolymorphicType( long.class, trial_start_ms ) );
+				SimpleMeasurement trial_start_ns_measurement = new SimpleMeasurement( "trial_start_ns", new PolymorphicType( long.class, trial_start_ns ) );
+				SimpleMeasurement trial_end_ns_measurement = new SimpleMeasurement( "trial_end_ns", new PolymorphicType( long.class, trial_end_ns ) );
+
+				st.addMeasurement( rep_measurement );
+				st.addMeasurement( trial_start_ms_measurement );
+				st.addMeasurement( trial_start_ns_measurement );
+				st.addMeasurement( trial_end_ns_measurement );
+
+				context.results_processor.processTrial( st );
+
+				trials.add( st );
 			}
-
-			trial_start_ms = System.currentTimeMillis();
-			trial_start_ns = System.nanoTime();
-
-			m.invoke( o, reps );
-
-			trial_end_ns = System.nanoTime();
-
-			for( Method aft: k.getAfterExperimentMethods() ) {
-				aft.invoke( o );
-			}
-
-			// statistical calculations derived from "numerically stable algorithm"
-			// http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Online_algorithm
-			n += 1;
-			long x = elapsed( trial_start_ns, trial_end_ns );
-			double delta = ( (double) x ) - mean_ns;
-			mean_ns += delta / n;
-			M2 += delta * ( (double)x - mean_ns );
-			if ( n >= 2 ) {
-				variance_ns += M2 / n - 1;
-			}
-
-			SimpleMeasurement mean_ns_measurement = new SimpleMeasurement( "mean_ns", new PolymorphicType( double.class, mean_ns ) );
-			SimpleMeasurement variance_ns_measurement = new SimpleMeasurement( "variance_ns", new PolymorphicType( double.class, variance_ns ) );
-
-			st.addMeasurement( mean_ns_measurement );
-			st.addMeasurement( variance_ns_measurement );
-
-			SimpleMeasurement rep_measurement = new SimpleMeasurement( "reps", new PolymorphicType( int.class, reps ) );
-			SimpleMeasurement trial_start_ms_measurement = new SimpleMeasurement( "trial_start_ms", new PolymorphicType( long.class, trial_start_ms ) );
-			SimpleMeasurement trial_start_ns_measurement = new SimpleMeasurement( "trial_start_ns", new PolymorphicType( long.class, trial_start_ns ) );
-			SimpleMeasurement trial_end_ns_measurement = new SimpleMeasurement( "trial_end_ns", new PolymorphicType( long.class, trial_end_ns ) );
-
-			st.addMeasurement( rep_measurement );
-			st.addMeasurement( trial_start_ms_measurement );
-			st.addMeasurement( trial_start_ns_measurement );
-			st.addMeasurement( trial_end_ns_measurement );
-
-			context.results_processor.processTrial( st );
-
-			trials.add( st );
 		}
+		// should validate statistical model here
 	}
 
 	private void mark( boolean macro, AnnotatedClass k, Object o, Method m, int param_set )
