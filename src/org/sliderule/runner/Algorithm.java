@@ -133,11 +133,10 @@ class Algorithm {
 	}
 
 /*############################################################################
- *                         Warm-up the JVM (trigger JIT)
+ *      Warm-up the JVM / JIT (trigger tier1/2 compiler, inlining, ... )
  *############################################################################*/
 
 	private static final int N_WARMUP_REPS;
-	private static final int N_MACRO_WARMUP_REPS = 10;
 
 	static {
 		int n_warmup_reps = 10;
@@ -154,43 +153,6 @@ class Algorithm {
 		} catch ( Throwable t ) {
 		}
 		N_WARMUP_REPS = n_warmup_reps;
-	}
-
-	private void warmUp()
-	throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
-	{
-		D( "starting warm-up" );
-
-		Object r;
-		for( ClassAndInstance cai: alcai ) {
-
-			AnnotatedClass k = cai.klass;
-			Object o = cai.instance;
-
-			for( int row=0; row < param_values.length; row++ ) {
-
-				// set all parameters for a specific trial
-				for( int col=0; col < param_values[ row ].length; col++ ) {
-					Field f = param_fields[ col ];
-					PolymorphicType pmt = param_values[ row ][ col ];
-					f.set( o, pmt.value );
-				}
-
-				// execute the MicroBenchmarks
-//				for( Method m: k.getBenchmarkMethods() ) {
-//					r = m.invoke( o, N_WARMUP_REPS );
-//				}
-
-				// execute the MacroBenchmarks
-				for( Method m: k.getMacrobenchmarkMethods() ) {
-					for( int i=0; i<N_MACRO_WARMUP_REPS; i++ ) {
-						r = m.invoke( o );
-					}
-				}
-			}
-		}
-
-		D( "finished warm-up\n" );
 	}
 
 /*############################################################################
@@ -228,7 +190,7 @@ class Algorithm {
 
 			SimpleTrial st = new SimpleTrial( k.getAnnotatedClass(), m, param_fields, param_values[ param_set ] );
 
-			for( Method b4: k.getBeforeRepMethods() ) {
+			for( Method b4: k.getBeforeExperimentMethods() ) {
 				b4.invoke( o );
 			}
 
@@ -239,7 +201,7 @@ class Algorithm {
 
 			trial_end_ns = System.nanoTime();
 
-			for( Method aft: k.getAfterRepMethods() ) {
+			for( Method aft: k.getAfterExperimentMethods() ) {
 				aft.invoke( o );
 			}
 
@@ -343,7 +305,6 @@ class Algorithm {
 		if ( ! a.bench_classes.isEmpty() ) {
 			Algorithm algo = new Algorithm( a, c );
 			algo.setup();
-			algo.warmUp();
 			algo.bench();
 		}
 	}
