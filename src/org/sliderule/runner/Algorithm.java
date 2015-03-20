@@ -62,9 +62,9 @@ class Algorithm {
 	static int euprod( int[] cardinality ) {
 		return euprod( cardinality, -1 );
 	}
-	static int euprod( int[] cardinality, int index_to_omit ) {
+	static int euprod( int[] cardinality, int hold_index ) {
 		int result = 1;
-		for( int i=0; i < cardinality.length; result *= ( ( i <= index_to_omit || -1 == index_to_omit ) ? 1 : cardinality[ i ] ), i++ );
+		for( int i=0; i < cardinality.length; result *= ( ( -1 == hold_index || i > hold_index ) ? cardinality[ i ] : 1 ), i++ );
 		return result;
 	}
 

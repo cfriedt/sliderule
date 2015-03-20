@@ -18,10 +18,7 @@ package org.sliderule.stats;
 
 import static org.junit.Assert.*;
 
-import java.util.*;
-
 import org.junit.*;
-import org.sliderule.stats.*;
 
 public class StudentsTTest {
 	@Test
