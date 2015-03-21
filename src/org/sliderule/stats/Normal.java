@@ -92,8 +92,20 @@ public final class Normal {
 		r = negative ? -xrow[ i ] : xrow[ i ];
 		return r;
 	}
+	public static double pdf( double x ) {
+		return Math.exp( -0.5 * Math.pow( x, 2 ) ) / Math.sqrt( 2 * Math.PI );
+	}
 	public static double[] pdf( int size, double mean, double variance ) {
-		// TODO Auto-generated method stub
-		return null;
+		size |= 1; // odd number, so that zero is always there
+		double[] xpdf = new double[ size ];
+		double step_size = 8D / size;
+		double left_side = -4;
+		double center;
+		int i;
+		for( i=0, center = left_side; i<size; i++, center += step_size ) {
+			double z = pdf( center );
+			xpdf[ i ] = z;
+		}
+		return xpdf;
 	}
 }

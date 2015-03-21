@@ -18,4 +18,13 @@ abstract class AStatistics implements IStatistics {
 			return data;
 		}
 	}
+
+	@Override
+	public String toString() {
+		String r = super.toString() + ":{ " +
+			"mean: " + mean() + ", " +
+			"variance: " + variance() + ", " +
+			"}";
+		return r;
+	}
 }

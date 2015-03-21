@@ -55,9 +55,11 @@ public final class Histogram {
 	public Histogram( int n, IStatistics is ) {
 		int dl = is.size();
 		double[] ordered_data = is.orderedData();
-		double bin_width = ( is.highest() - is.lowest() ) / n;
-		double left_side = is.lowest();
-		double right_side = is.highest();
+		double highest = is.highest();
+		double lowest = is.lowest();
+		double bin_width = ( highest - lowest ) / n;
+		double left_side = lowest;
+		double right_side = highest;
 		double[] bin_centers = new double[ n ];
 		double[] hist_data = new double[ bin_centers.length ];
 
@@ -67,11 +69,11 @@ public final class Histogram {
 		for( i = 0, center = left_side + bin_width/2; i < bin_centers.length; bin_centers[ i ] = center, center += bin_width, i++ );
 
 		for(
-			i=0, j=0;
-			i < bin_centers.length && j < dl;
+			i=0, j=0, right_side = left_side + bin_width;
+			i < n && j < dl;
 			i++, left_side += bin_width, right_side += bin_width
 		) {
-			for( ; j < ordered_data.length && ordered_data[ j ] <= right_side; hist_data[ i ]++, j++ );
+			for( ; j < dl && ordered_data[ j ] <= right_side; hist_data[ i ]++, j++ );
 		}
 		this.is = is;
 		this.data = hist_data;
