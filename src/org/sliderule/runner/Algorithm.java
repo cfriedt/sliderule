@@ -235,8 +235,8 @@ class Algorithm {
 				elapsed_ns = elapsed( trial_start_ns, trial_end_ns );
 				ts.update( elapsed_ns );
 
-				SimpleMeasurement mean_ns_measurement = new SimpleMeasurement( "mean_ns", new PolymorphicType( double.class, ts.getMean() ) );
-				SimpleMeasurement variance_ns_measurement = new SimpleMeasurement( "variance_ns", new PolymorphicType( double.class, ts.getVariance() ) );
+				SimpleMeasurement mean_ns_measurement = new SimpleMeasurement( "mean_ns", new PolymorphicType( double.class, ts.mean() ) );
+				SimpleMeasurement variance_ns_measurement = new SimpleMeasurement( "variance_ns", new PolymorphicType( double.class, ts.variance() ) );
 
 				st.addMeasurement( mean_ns_measurement );
 				st.addMeasurement( variance_ns_measurement );
