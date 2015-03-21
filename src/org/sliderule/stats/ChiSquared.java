@@ -246,10 +246,10 @@ public final class ChiSquared {
 	 * is that the distribution is not a good fit.
 	 * @param proto a reference distribution of the random variable {@code X}
 	 * @param h data sampled from the random variable {@code X}
+	 * @param p the confidence level the test must satisfy
 	 * @return true if the null hypothesis is invalid - i.e. if {@code proto} is a good fit for {@code h}
 	 */
-	// remember, when comparing arbitrary (nonstandard) normal distributions, divide by sigma^2
-	public static boolean test( double confidence, double[] proto, double[] h ) {
+	public static boolean test( double p, double[] proto, double[] h ) {
 		if ( null == proto || null == h || proto.length != h.length || 0 == proto.length ) {
 			throw new IllegalArgumentException();
 		}
@@ -257,7 +257,7 @@ public final class ChiSquared {
 		for( int i=0; i<proto.length; i++ ) {
 			sum += Math.pow( Math.abs( h[i] - proto[ i ] ), 2 ) / proto[ i ];
 		}
-		double p2 = inv( proto.length-1, confidence );
-		return sum <= p2;
+		double x = inv( proto.length-1, p );
+		return sum <= x;
 	}
 }
