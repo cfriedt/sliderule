@@ -22,7 +22,7 @@ public class OnlineStatistics extends AStatistics {
 	double mean;
 	double variance;
 	double M2;
-	ArrayList<Double> data;
+	ArrayList<Double> data = new ArrayList<Double>();
 	double lowest = Double.POSITIVE_INFINITY;
 	double highest = Double.NEGATIVE_INFINITY;
 
@@ -69,6 +69,8 @@ public class OnlineStatistics extends AStatistics {
 			variance = 0;
 			M2 = 0;
 			data.clear();
+			lowest = Double.POSITIVE_INFINITY;
+			highest = Double.NEGATIVE_INFINITY;
 		}
 	}
 

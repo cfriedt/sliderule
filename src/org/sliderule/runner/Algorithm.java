@@ -295,9 +295,10 @@ class Algorithm {
 		Histogram variances_normal_hist = new Histogram( Normal.pdf( variances_stats.size(), variances_stats.mean(), variances_stats.variance() ) );
 		boolean variances_are_normally_distributed = ChiSquared.test( P_CONFIDENCE, variances_normal_hist.data(), variances_hist.data() );
 
-		return
+		boolean r =
 			means_are_normally_distributed &&
 			variances_are_normally_distributed;
+		return r;
 	}
 
 	private void mark( boolean macro, AnnotatedClass k, Object o, Method m, int param_set )

@@ -71,7 +71,7 @@ public final class Histogram {
 			i < bin_centers.length && j < dl;
 			i++, left_side += bin_width, right_side += bin_width
 		) {
-			for( ; ordered_data[ j ] <= right_side; hist_data[ i ]++, j++ );
+			for( ; j < ordered_data.length && ordered_data[ j ] <= right_side; hist_data[ i ]++, j++ );
 		}
 		this.is = is;
 		this.data = hist_data;
