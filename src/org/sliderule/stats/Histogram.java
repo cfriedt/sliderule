@@ -15,7 +15,7 @@ import java.util.*;
  */
 public final class Histogram {
 	final IStatistics is;
-	final int[] data;
+	final double[] data;
 	final double bin_width;
 	final double[] bin_centers;
 
@@ -59,7 +59,7 @@ public final class Histogram {
 		double left_side = is.lowest();
 		double right_side = is.highest();
 		double[] bin_centers = new double[ n ];
-		int[] hist_data = new int[ bin_centers.length ];
+		double[] hist_data = new double[ bin_centers.length ];
 
 		double center;
 		int i, j;
@@ -163,7 +163,7 @@ public final class Histogram {
 	 * @param i the bin number
 	 * @return the bin center
 	 */
-	public int[] data() {
+	public double[] data() {
 		return Arrays.copyOf( data, data.length );
 	}
 }

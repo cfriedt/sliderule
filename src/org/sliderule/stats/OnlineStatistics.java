@@ -5,7 +5,7 @@ import java.util.*;
 /**
  * <p><b>Online Calculation of Mean and Variance</b></p>
  *
- * <p>This class provides a numerically stable means for estimating mean and variance online
+ * <p>This class provides a numerically stable means for estimating {@link #mean() mean} and {@link #variance() variance} online
  * - i.e. iteratively (possibly while the experiment is happening).
  * </p>
  *
