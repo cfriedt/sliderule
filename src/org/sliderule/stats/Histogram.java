@@ -19,9 +19,62 @@ public final class Histogram {
 	final double bin_width;
 	final double[] bin_centers;
 
-	private Histogram( IStatistics is, int[] data, double bin_width, double[] bin_centers ) {
+	/**
+	 * Generate a {@link Histogram} representative of the provided data set.
+	 * @param n generate a {@link Histogram} with {@code n} bins.
+	 * @param data the set of data in question
+	 * @return the {@link Histogram}
+	 */
+	public Histogram( int n, double[] data ) {
+		this( n, new OfflineStatistics( data ) );
+	}
+	/**
+	 * Generate a {@link Histogram} representative of the provided data set.
+	 * The generated {@link Histogram} will have optimum {@link #binWidth() bin width}.
+	 * @param data the set of data in question
+	 * @return the {@link Histogram}
+	 */
+	public Histogram( double[] data ) {
+		this( new OfflineStatistics( data ) );
+	}
+	/**
+	 * Generate a {@link Histogram} representative of the provided data set.
+	 * The generated {@link Histogram} will have optimum {@link #binWidth() bin width}.
+	 * @param is the {@link IStatistics} representing the data set in question
+	 * @return the {@link Histogram}
+	 */
+	public Histogram( IStatistics is ) {
+		this( partition( is ), is );
+	}
+	/**
+	 * Generate a {@link Histogram} representative of the provided data set.
+	 * @param n generate a {@link Histogram} with {@code n} bins.
+	 * @param is the {@link IStatistics} representing the data set in question
+	 * @return the {@link Histogram}
+	 */
+	public Histogram( int n, IStatistics is ) {
+		int dl = is.size();
+		double[] ordered_data = is.orderedData();
+		double bin_width = ( is.highest() - is.lowest() ) / n;
+		double left_side = is.lowest();
+		double right_side = is.highest();
+		double[] bin_centers = new double[ n ];
+		int[] hist_data = new int[ bin_centers.length ];
+
+		double center;
+		int i, j;
+
+		for( i = 0, center = left_side + bin_width/2; i < bin_centers.length; bin_centers[ i ] = center, center += bin_width, i++ );
+
+		for(
+			i=0, j=0;
+			i < bin_centers.length && j < dl;
+			i++, left_side += bin_width, right_side += bin_width
+		) {
+			for( ; ordered_data[ j ] <= right_side; hist_data[ i ]++, j++ );
+		}
 		this.is = is;
-		this.data = data;
+		this.data = hist_data;
 		this.bin_width = bin_width;
 		this.bin_centers = bin_centers;
 	}
@@ -82,69 +135,6 @@ public final class Histogram {
 		OfflineStatistics os = new OfflineStatistics( data );
 		return partition( os );
 	}
-
-	/**
-	 * Generate a {@link Histogram} representative of the provided data set.
-	 * @param n generate a {@link Histogram} with {@code n} bins.
-	 * @param data the set of data in question
-	 * @return the {@link Histogram}
-	 */
-	public static Histogram generate( int n, double[] data ) {
-		OfflineStatistics os = new OfflineStatistics( data );
-		return generate( n, os );
-	}
-	/**
-	 * Generate a {@link Histogram} representative of the provided data set.
-	 * The generated {@link Histogram} will have optimum {@link #binWidth() bin width}.
-	 * @param data the set of data in question
-	 * @return the {@link Histogram}
-	 */
-	public static Histogram generate( double[] data ) {
-		OfflineStatistics os = new OfflineStatistics( data );
-		return generate( os );
-	}
-	/**
-	 * Generate a {@link Histogram} representative of the provided data set.
-	 * The generated {@link Histogram} will have optimum {@link #binWidth() bin width}.
-	 * @param is the {@link IStatistics} representing the data set in question
-	 * @return the {@link Histogram}
-	 */
-	public static Histogram generate( IStatistics is ) {
-		return generate( partition( is ), is );
-	}
-	/**
-	 * Generate a {@link Histogram} representative of the provided data set.
-	 * @param n generate a {@link Histogram} with {@code n} bins.
-	 * @param is the {@link IStatistics} representing the data set in question
-	 * @return the {@link Histogram}
-	 */
-	public static Histogram generate( int n, IStatistics is ) {
-
-		int dl = is.size();
-		double[] ordered_data = is.orderedData();
-		double bin_width = ( is.highest() - is.lowest() ) / n;
-		double left_side = is.lowest();
-		double right_side = is.highest();
-		double[] bin_centers = new double[ n ];
-		int[] hist_data = new int[ bin_centers.length ];
-
-		double center;
-		int i, j;
-
-		for( i = 0, center = left_side + bin_width/2; i < bin_centers.length; bin_centers[ i ] = center, center += bin_width, i++ );
-
-		for(
-			i=0, j=0;
-			i < bin_centers.length && j < dl;
-			i++, left_side += bin_width, right_side += bin_width
-		) {
-			for( ; ordered_data[ j ] <= right_side; hist_data[ i ]++, j++ );
-		}
-
-		Histogram hist = new Histogram( is, hist_data, bin_width, bin_centers );
-		return hist;
-	}
-
 	/**
 	 * Bin width of the {@link Histogram}.
 	 * @return the bin width

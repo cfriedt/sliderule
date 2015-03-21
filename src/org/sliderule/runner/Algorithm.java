@@ -39,6 +39,7 @@ class Algorithm {
 	static final double P_CONFIDENCE = 0.95;
 
 	final int MIN_TRIALS;
+	final int MAX_TRIALS;
 
 	final Arguments arguments;
 	final Context context;
@@ -59,6 +60,7 @@ class Algorithm {
 				),
 				OnlineStatistics.MIN_N_BEFORE_VALID_VARIANCE
 			);
+		MAX_TRIALS = 10 * MIN_TRIALS;
 	}
 
 	private static class ClassAndInstance {
@@ -211,7 +213,7 @@ class Algorithm {
 		m.invoke( o, N_WARMUP_REPS );
 
 		// proceed until the result of the trials is statistically significant
-		for( int trial=0; trial < MIN_TRIALS; trial++ ) {
+		for( int trial=0; ( trial < MIN_TRIALS || ( ! validateStatisticalModel( trials ) ) ) && trial < MAX_TRIALS; trial++ ) {
 
 			SimpleTrial st = new SimpleTrial( k.getAnnotatedClass(), m, param_fields, param_values[ param_set ] );
 
@@ -256,7 +258,46 @@ class Algorithm {
 				trials.add( st );
 			}
 		}
-		// should validate statistical model here
+	}
+
+	private boolean validateStatisticalModel( ArrayList<Trial> trials ) {
+
+		double[] means = new double[ trials.size() ];
+		double[] variances = new double[ trials.size() ];
+
+		int i=0;
+		for( Trial t: trials ) {
+
+			boolean found_mean_ns = false;
+			boolean found_variance_ns = false;
+			for( Measurement measure: t.measurements() ) {
+				if ( "mean_ns".equals( measure.description() ) ) {
+					means[ i ] = (double)(Double) measure.value().value;
+					found_mean_ns = true;
+				}
+				if ( "variance_ns".equals( measure.description() ) ) {
+					variances[ i ] = (double)(Double) measure.value().value;
+					found_variance_ns = true;
+				}
+			}
+			if ( !( found_mean_ns && found_variance_ns ) ) {
+				throw new IllegalStateException();
+			}
+		}
+
+		OfflineStatistics means_stats = new OfflineStatistics( means );
+		Histogram means_hist = new Histogram( means_stats );
+		Histogram means_normal_hist = new Histogram( Normal.pdf( means_stats.size(), means_stats.mean(), means_stats.variance() ) );
+		boolean means_are_normally_distributed = ChiSquared.test( P_CONFIDENCE, means_normal_hist.data(), means_hist.data() );
+
+		OfflineStatistics variances_stats = new OfflineStatistics( variances );
+		Histogram variances_hist = new Histogram( variances_stats );
+		Histogram variances_normal_hist = new Histogram( Normal.pdf( variances_stats.size(), variances_stats.mean(), variances_stats.variance() ) );
+		boolean variances_are_normally_distributed = ChiSquared.test( P_CONFIDENCE, variances_normal_hist.data(), variances_hist.data() );
+
+		return
+			means_are_normally_distributed &&
+			variances_are_normally_distributed;
 	}
 
 	private void mark( boolean macro, AnnotatedClass k, Object o, Method m, int param_set )

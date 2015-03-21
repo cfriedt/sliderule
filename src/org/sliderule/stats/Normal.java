@@ -32,7 +32,7 @@ package org.sliderule.stats;
  *     <li>DeGroot, Morris H., and Schervish, Mark J. Probability and Statistics, 3rd Ed. Toronto: Addison-Wesley, 2002. pp. 776-778. Print.</li>
  *   </ul>
  */
-final class Normal {
+public final class Normal {
 	private Normal() {}
 
 	// produced via Matlab's normcdf function
@@ -91,5 +91,9 @@ final class Normal {
 		i--;
 		r = negative ? -xrow[ i ] : xrow[ i ];
 		return r;
+	}
+	public static double[] pdf( int size, double mean, double variance ) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

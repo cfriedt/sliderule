@@ -249,7 +249,7 @@ public final class ChiSquared {
 	 * @return true if the null hypothesis is invalid - i.e. if {@code proto} is a good fit for {@code h}
 	 */
 	// remember, when comparing arbitrary (nonstandard) normal distributions, divide by sigma^2
-	public static boolean test( double confidence, double[] proto, double[] h ) {
+	public static boolean test( double confidence, int[] proto, int[] h ) {
 		if ( null == proto || null == h || proto.length != h.length || 0 == proto.length ) {
 			throw new IllegalArgumentException();
 		}
