@@ -48,7 +48,7 @@ public class ConsoleResultProcessor implements ResultProcessor {
 
 		for( Measurement m: trial.measurements() ) {
 			switch( m.description() ) {
-			case "mean_ns":
+			case "elapsed_time_ns":
 				ts.os.update( (double)(Double) m.value().value );
 				break;
 			case "warning":

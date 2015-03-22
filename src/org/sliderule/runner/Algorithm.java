@@ -353,7 +353,7 @@ class Algorithm {
 
 	private void prepareMeasurements( SimpleTrial st, int reps, long trial_start_ms, long trial_start_ns, long trial_end_ns, OnlineStatistics ts, Object dummy ) {
 
-		SimpleMeasurement mean_ns_measurement = new SimpleMeasurement( "mean_ns", new PolymorphicType( double.class, ts.mean() ) );
+		SimpleMeasurement mean_ns_measurement = new SimpleMeasurement( "elapsed_time_ns", new PolymorphicType( double.class, ts.mean() ) );
 		SimpleMeasurement variance_ns_measurement = new SimpleMeasurement( "variance_ns", new PolymorphicType( double.class, ts.variance() ) );
 		SimpleMeasurement rep_measurement = new SimpleMeasurement( "reps", new PolymorphicType( int.class, reps ) );
 		SimpleMeasurement trial_start_ms_measurement = new SimpleMeasurement( "trial_start_ms", new PolymorphicType( long.class, trial_start_ms ) );
@@ -387,7 +387,7 @@ class Algorithm {
 		for( Trial t: trials ) {
 			boolean found_mean_ns = false;
 			for( Measurement measure: t.measurements() ) {
-				if ( ( ! found_mean_ns ) && "mean_ns".equals( measure.description() ) ) {
+				if ( ( ! found_mean_ns ) && "elapsed_time_ns".equals( measure.description() ) ) {
 					means[ i ] = (double)(Double) measure.value().value;
 					break;
 				}
