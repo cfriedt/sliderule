@@ -193,7 +193,7 @@ public final class ChiSquared {
 		if ( p < 0 || p > 1 ) {
 			throw new IllegalArgumentException();
 		}
-		if ( n < 2 ) {
+		if ( n < AStatistics.MIN_N_BEFORE_VALID_VARIANCE ) {
 			throw new IllegalArgumentException();
 		}
 		// values converge after this point

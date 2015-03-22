@@ -1,6 +1,7 @@
 package org.sliderule.model;
 
 import java.lang.reflect.*;
+import java.util.*;
 
 public final class PolymorphicType {
 
@@ -13,7 +14,7 @@ public final class PolymorphicType {
 		if ( null == klass ) {
 			throw new IllegalArgumentException( "klass may not be null" );
 		}
-		if ( !( null == value || klass.isPrimitive() || klass.isAssignableFrom( value.getClass() ) ) ) {
+		if ( !( null == value || klass.isPrimitive() || Number.class.isAssignableFrom( klass ) || klass.isAssignableFrom( value.getClass() ) ) ) {
 			throw new IllegalArgumentException( "class '" + klass + "' is not assignable from '" + value.getClass() + "'" );
 		}
 	}

@@ -2,7 +2,7 @@ package org.sliderule.stats;
 
 import java.util.*;
 
-abstract class AStatistics implements IStatistics {
+public abstract class AStatistics implements IStatistics {
 
 	public static final int MIN_N_BEFORE_VALID_VARIANCE = 2;
 
@@ -19,12 +19,20 @@ abstract class AStatistics implements IStatistics {
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public String toString() {
-		String r = super.toString() + ":{ " +
-			"mean: " + mean() + ", " +
-			"variance: " + variance() + ", " +
-			"}";
+		String r = "";
+		r += "{ ";
+		r += "size: " + size() + ", ";
+		r += "mean: " + mean() + ", ";
+		r += "variance: " + variance() + ", ";
+		r += "std_deviation: " + standardDeviation() + ", ";
+		r += "lowest: " + lowest() + ", ";
+		r += "highest: " + highest() + ", ";
+		r += "}";
 		return r;
 	}
 }

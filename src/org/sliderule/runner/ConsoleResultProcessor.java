@@ -1,46 +1,67 @@
 package org.sliderule.runner;
 
 import java.io.*;
+import java.util.*;
 
 import org.sliderule.api.*;
 import org.sliderule.model.*;
+import org.sliderule.stats.*;
 
 public class ConsoleResultProcessor implements ResultProcessor {
 
+	private class TrialSet {
+		UUID id;
+		Trial proto;
+		OnlineStatistics os = new OnlineStatistics();
+		@Override
+		public String toString() {
+			String r = "";
+			r += proto.toString() + "\n";
+			r += os;
+			return r;
+		}
+	}
+
+	TrialSet ts = new TrialSet();
+
+	public ConsoleResultProcessor() {
+	}
+
 	@Override
 	public void close() throws IOException {
+		if ( null != ts.id ) {
+			System.out.println( ts );
+		}
 	}
 
 	@Override
 	public void processTrial( Trial trial ) {
-		return;
-//		boolean have_reps = false;
-//		long reps = -1;
-//		boolean have_trial_start_ns = false;
-//		long trial_start_ns = -1;
-//		boolean have_trial_end_ns = false;
-//		long trial_end_ns = -1;
-//		for( Measurement m: trial.measurements() ) {
-//			switch( m.description() ) {
-//			case "reps":
-//				reps = (int) m.value().value;
-//				have_reps = true;
-//				break;
-//			case "trial_start_ns":
-//				trial_start_ns = (long) m.value().value;
-//				have_trial_start_ns = true;
-//				break;
-//			case "trial_end_ns":
-//				trial_end_ns = (long) m.value().value;
-//				have_trial_end_ns = true;
-//				break;
-//			default:
-//				break;
-//			}
-//			if ( have_trial_start_ns && have_trial_end_ns && have_reps ) {
-//				System.out.println( "" + ( (double)( trial_end_ns - trial_start_ns ) / (double) reps ) + "," );
-//				break;
-//			}
-//		}
+
+		if ( trial.id() != ts.id ) {
+			if ( ts.id != null ) {
+				System.out.println( ts );
+				ts.os.clear();
+			}
+			ts.id = trial.id();
+			ts.proto = trial;
+		}
+
+		for( Measurement m: trial.measurements() ) {
+			switch( m.description() ) {
+			case "mean_ns":
+				ts.os.update( (double)(Double) m.value().value );
+				break;
+			case "warning":
+				System.out.println( ts );
+				System.out.flush();
+				System.err.println( "" + m.value().value );
+				System.err.flush();
+				ts.id = null;
+				ts.os.clear();
+				break;
+			default:
+				break;
+			}
+		}
 	}
 }

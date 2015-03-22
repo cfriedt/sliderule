@@ -168,4 +168,12 @@ public final class Histogram {
 	public double[] data() {
 		return Arrays.copyOf( data, data.length );
 	}
+
+	/**
+	 * The number of bins in the histogram.
+	 * @return the number of bins
+	 */
+	public int size() {
+		return data.length;
+	}
 }

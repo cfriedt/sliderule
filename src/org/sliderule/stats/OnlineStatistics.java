@@ -22,29 +22,59 @@ public class OnlineStatistics extends AStatistics {
 	double mean;
 	double variance;
 	double M2;
-	ArrayList<Double> data = new ArrayList<Double>();
-	double lowest = Double.POSITIVE_INFINITY;
-	double highest = Double.NEGATIVE_INFINITY;
+	double lowest;
+	double highest;
+	final ArrayList<Double> data = new ArrayList<Double>();
 
 	public OnlineStatistics() {
-		reset();
+		clear();
 	}
 
+	/**
+	 * Update statistical measures, size of the data set, and cached data with a new sample,
+	 * {@code x}, taken from a random variable.
+	 * @param x new sampled data
+	 */
 	public void update( byte x ) {
 		update( (double) x );
 	}
+	/**
+	 * Update statistical measures, size of the data set, and cached data with a new sample,
+	 * {@code x}, taken from a random variable.
+	 * @param x new sampled data
+	 */
 	public void update( short x ) {
 		update( (double) x );
 	}
+	/**
+	 * Update statistical measures, size of the data set, and cached data with a new sample,
+	 * {@code x}, taken from a random variable.
+	 * @param x new sampled data
+	 */
 	public void update( int x ) {
 		update( (double) x );
 	}
+	/**
+	 * Update statistical measures, size of the data set, and cached data with a new sample,
+	 * {@code x}, taken from a random variable.
+	 * @param x new sampled data
+	 */
 	public void update( long x ) {
 		update( (double) x );
 	}
+	/**
+	 * Update statistical measures, size of the data set, and cached data with a new sample,
+	 * {@code x}, taken from a random variable.
+	 * @param x new sampled data
+	 */
 	public void update(  float x ) {
 		update( (double) x );
 	}
+	/**
+	 * Update statistical measures, size of the data set, and cached data with a new sample,
+	 * {@code x}, taken from a random variable.
+	 * @param x new sampled data
+	 */
 	public void update(  double x ) {
 		synchronized( this ) {
 			n++;
@@ -52,7 +82,7 @@ public class OnlineStatistics extends AStatistics {
 			mean += delta / n;
 			M2 += delta * ( x - mean );
 			if ( n >= MIN_N_BEFORE_VALID_VARIANCE ) {
-				variance += M2 / n - 1;
+				variance = M2 / ( n - 1 );
 			}
 			if ( x < lowest ) {
 				lowest = x;
@@ -60,9 +90,16 @@ public class OnlineStatistics extends AStatistics {
 			if ( x > highest ) {
 				highest = x;
 			}
+			if ( variance < 0 ) {
+				throw new IllegalStateException();
+			}
 		}
 	}
-	public void reset() {
+
+	/**
+	 * Clear internal data caches and calculated statistical measures.
+	 */
+	public void clear() {
 		synchronized( this ) {
 			n = 0;
 			mean = 0;
@@ -74,18 +111,33 @@ public class OnlineStatistics extends AStatistics {
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public double mean() {
 		return mean;
 	}
+
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public double variance() {
 		return variance;
 	}
+
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public int size() {
 		return n;
 	}
+
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public double[] data() {
 		synchronized( this ) {
@@ -98,11 +150,17 @@ public class OnlineStatistics extends AStatistics {
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public double lowest() {
 		return lowest;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public double highest() {
 		return highest;
