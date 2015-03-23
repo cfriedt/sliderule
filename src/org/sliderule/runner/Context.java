@@ -23,7 +23,7 @@ import org.sliderule.api.*;
 class Context {
 
 	final HashSet<AnnotatedClass> bench_classes;
-	final ResultProcessor results_processor;
+	ResultProcessor results_processor;
 
 	public Context() {
 		bench_classes = new HashSet<AnnotatedClass>();
@@ -36,5 +36,9 @@ class Context {
 
 	public Set<AnnotatedClass> getAnnotatedClasses() {
 		return bench_classes;
+	}
+
+	public void setResultProcessor( ResultProcessor p ) {
+		results_processor = p;
 	}
 }

@@ -9,7 +9,7 @@ import org.sliderule.stats.*;
 
 public class ConsoleResultProcessor implements ResultProcessor {
 
-	private class TrialSet {
+	protected class TrialSet {
 		UUID id;
 		Trial proto;
 		OnlineStatistics os = new OnlineStatistics();

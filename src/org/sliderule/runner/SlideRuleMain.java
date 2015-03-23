@@ -20,6 +20,10 @@ import java.io.*;
 import java.lang.reflect.*;
 import java.util.*;
 
+import org.sliderule.api.*;
+
+import com.apple.laf.ClientPropertyApplicator.*;
+
 public final class SlideRuleMain {
 	private SlideRuleMain() {}
 	private Arguments arguments = new Arguments();
@@ -250,13 +254,20 @@ public final class SlideRuleMain {
 	}
 
 	private void setup()
-	throws NonUniformBenchmarkClassesException
+	throws NonUniformBenchmarkClassesException, ClassNotFoundException, InstantiationException, IllegalAccessException
 	{
 		AnnotatedClass prev_ac = null;
 
 		for( Class<?> klass: arguments.bench_classes ) {
 
 			AnnotatedClass ac = new AnnotatedClass( klass );
+
+			if ( arguments.config_properties.containsKey( "results.console.class" ) ) {
+				ClassLoader cl = ClassLoader.getSystemClassLoader();
+				Class<ResultProcessor> crp = (Class<ResultProcessor>) cl.loadClass( arguments.config_properties.getProperty( "results.console.class" ) );
+				ResultProcessor rp = (ResultProcessor) crp.newInstance();
+				context.setResultProcessor( rp );
+			}
 
 			if ( null == prev_ac ) {
 				if ( ! ( ac.getBenchmarkMethods().isEmpty() && ac.getMacrobenchmarkMethods().isEmpty() ) ) {
@@ -320,6 +331,8 @@ public final class SlideRuleMain {
 		} catch ( InterruptedException e ) {
 			e.printStackTrace();
 		} catch ( IOException e ) {
+			e.printStackTrace();
+		} catch ( ClassNotFoundException e ) {
 			e.printStackTrace();
 		}
 		if ( 0 != return_val || srm.arguments.help ) {
