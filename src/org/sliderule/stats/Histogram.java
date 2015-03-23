@@ -16,6 +16,7 @@ import java.util.*;
 public final class Histogram {
 	final IStatistics is;
 	final double[] data;
+	final double[] normalized_data;
 	final double bin_width;
 	final double[] bin_centers;
 
@@ -61,7 +62,8 @@ public final class Histogram {
 		double left_side = lowest;
 		double right_side = highest;
 		double[] bin_centers = new double[ n ];
-		double[] hist_data = new double[ bin_centers.length ];
+		data = new double[ bin_centers.length ];
+		normalized_data = new double[ bin_centers.length ];
 
 		double center;
 		int i, j;
@@ -73,10 +75,14 @@ public final class Histogram {
 			i < n && j < dl;
 			i++, left_side += bin_width, right_side += bin_width
 		) {
-			for( ; j < dl && ordered_data[ j ] <= right_side; hist_data[ i ]++, j++ );
+			for( ; j < dl && ordered_data[ j ] <= right_side; data[ i ]++, j++ );
 		}
+
+		for( i = 0; i < normalized_data.length; i++ ) {
+			normalized_data[ i ] = data[ i ] / dl;
+		}
+
 		this.is = is;
-		this.data = hist_data;
 		this.bin_width = bin_width;
 		this.bin_centers = bin_centers;
 	}
@@ -161,11 +167,25 @@ public final class Histogram {
 		return Arrays.copyOf( bin_centers, bin_centers.length );
 	}
 	/**
-	 * Returns the center of the all bins.
-	 * @param i the bin number
-	 * @return the bin center
+	 * The histogram data.
+	 * @return the histogram data.
 	 */
 	public double[] data() {
 		return Arrays.copyOf( data, data.length );
+	}
+	/**
+	 * The histogram data.
+	 * @return the histogram data.
+	 */
+	public double[] normalizedData() {
+		return Arrays.copyOf( normalized_data, normalized_data.length );
+	}
+
+	/**
+	 * The number of bins in the histogram.
+	 * @return the number of bins
+	 */
+	public int size() {
+		return data.length;
 	}
 }

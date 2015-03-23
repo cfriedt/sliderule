@@ -15,14 +15,14 @@ final class SimpleTrial implements Trial {
 	private final UUID id;
 	private final ArrayList<Measurement> measurements;
 
-	public SimpleTrial(  Class<?> bench_class, Method method, Field[] param, PolymorphicType[] param_value )
+	public SimpleTrial( UUID id, Class<?> bench_class, Method method, Field[] param, PolymorphicType[] param_value )
 	{
 		this.bench_class = bench_class;
 		this.method = method;
 		this.param = param;
 		this.param_value = param_value;
-		id = UUID.randomUUID();
-		measurements = new ArrayList<Measurement>();
+		this.id = id;
+		measurements = new ArrayList<Measurement>(  );
 	}
 
 	@Override

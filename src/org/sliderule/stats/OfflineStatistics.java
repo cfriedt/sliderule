@@ -5,8 +5,10 @@ import java.util.*;
 /**
  * <p><b>Offline Calculation of Mean and Variance</b></p>
  *
- * <p>This class provides methods for calculating the {@link #mean() mean} and {@link #variance() variance} of
- * sample data, after collection has taken place.
+ * <p>This class provides methods for calculating the
+ * {@link #mean() mean}, {@link #variance() variance},
+ * and {@link #standardDeviation() standard deviation}
+ * of a random variable, after sampling has taken place.
  * </p>
  *
  * @author <a href="mailto:chrisfriedt@gmail.com">Christopher Friedt</a>

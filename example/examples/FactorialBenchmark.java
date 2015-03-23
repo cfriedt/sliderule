@@ -61,10 +61,21 @@ public final class FactorialBenchmark {
 	@Macrobenchmark
 	long mystery() {
 		int number = this.number;
-		int reps = 10000;
+		int reps = 100000;
+		int opt = (int) ( Double.doubleToLongBits( Math.random() ) % 3 );
 		long dummy = 0L;
 		for( int i=0; i < reps; i++ ) {
-			dummy |= Factorial.tailRecursive( number, 1 );
+			switch( opt ) {
+			case 0:
+				dummy |= Factorial.iterative( number );
+				break;
+			case 1:
+				dummy |= Factorial.recursive( number );
+				break;
+			case 2:
+				dummy |= Factorial.tailRecursive( number, 1 );
+				break;
+			}
 		}
 		return dummy;
 	}

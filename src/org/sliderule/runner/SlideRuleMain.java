@@ -279,7 +279,7 @@ public final class SlideRuleMain {
 		}
 	}
 	private void go()
-	throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, InterruptedException
+	throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, InterruptedException, IOException
 	{
 		Algorithm.evaluate( arguments, context );
 	}
@@ -318,6 +318,8 @@ public final class SlideRuleMain {
 		} catch ( InvocationTargetException e ) {
 			e.printStackTrace();
 		} catch ( InterruptedException e ) {
+			e.printStackTrace();
+		} catch ( IOException e ) {
 			e.printStackTrace();
 		}
 		if ( 0 != return_val || srm.arguments.help ) {

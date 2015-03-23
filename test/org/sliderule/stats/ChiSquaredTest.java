@@ -112,7 +112,8 @@ public class ChiSquaredTest {
  			expected[ i ] = proto[ i ] * N;
 		}
 		boolean expected_pass = false;
-		boolean actual_pass = ChiSquared.test( 0.95, expected, observed );
+		final boolean normalize = false;
+		boolean actual_pass = ChiSquared.test( 0.95, normalize, new Histogram( expected ), new Histogram( observed ) );
 		assertEquals( "expected the test to " + ( expected_pass ? "pass" : "fail"), expected_pass, actual_pass );
 	}
 }
