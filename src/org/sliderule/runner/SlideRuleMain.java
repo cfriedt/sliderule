@@ -172,6 +172,21 @@ public final class SlideRuleMain {
 						throw sfnfe;
 					}
 					continue;
+				} else if ( "--debug".equals( arg[ i ] ) ) {
+					if ( i+1 >= arg.length ) {
+						SpecificMissingArgumentException smae = new SpecificMissingArgumentException();
+						smae.option_given = arg[i];
+						throw smae;
+					}
+					i++;
+					try {
+						arguments.debug = Integer.parseInt( arg[i] );
+					} catch( NumberFormatException e ) {
+						SpecificIllegalArgumentException siae = new SpecificIllegalArgumentException();
+						siae.option_given = arg[i];
+						throw siae;
+					}
+					continue;
 				} else if ( arg[i].startsWith( "-D" ) ) {
 					String[] prop = arg[i].substring( "-D".length() ).split( "=" );
 					if ( prop.length != 2 ) {

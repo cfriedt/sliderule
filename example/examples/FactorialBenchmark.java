@@ -61,7 +61,7 @@ public final class FactorialBenchmark {
 	@Macrobenchmark
 	long mystery() {
 		int number = this.number;
-		int reps = 100000;
+		int reps = 10000;
 		int opt = (int) ( Double.doubleToLongBits( Math.random() ) % 3 );
 		long dummy = 0L;
 		for( int i=0; i < reps; i++ ) {

@@ -1,5 +1,6 @@
 package org.sliderule;
 
+import org.junit.*;
 import org.junit.runner.*;
 import org.junit.runners.*;
 import org.sliderule.stats.*;
@@ -9,4 +10,8 @@ import org.sliderule.stats.*;
 	ChiSquaredTest.class, NormalTest.class, StudentsTTest.class, FactorialTest.class
 })
 public class AllTests {
+	@Before
+	public void runGC() {
+		System.gc();
+	}
 }

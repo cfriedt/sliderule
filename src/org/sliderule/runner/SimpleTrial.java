@@ -41,19 +41,6 @@ final class SimpleTrial implements Trial {
 
 	@Override
 	public String toString() {
-		String r = "";
-		r += bench_class.getName() + ":" + method.getName() + "():{";
-		if ( !( null == param || 0 == param.length ) ) {
-			for( int i=0; i<param.length; i++ ) {
-				r += param[ i ].getName();
-				r += ":";
-				r += param_value[ i ];
-				if ( i < param.length - 1 ) {
-					r += ",";
-				}
-			}
-		}
-		r += "}";
-		return r;
+		return Algorithm.nameTrial( bench_class, method, param, param_value );
 	}
 }

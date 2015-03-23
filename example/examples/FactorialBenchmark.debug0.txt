@@ -1,0 +1,89 @@
+DEBUG: benchmarking examples.FactorialBenchmark with parameters [number:int:5]
+DEBUG: Microbenchmarking examples.FactorialBenchmark.tailRecursive()
+DEBUG: entering trials loop at 1427121521634
+DEBUG: MAX TRIALS is 810
+DEBUG: statistical model validated
+DEBUG: exited trials loop at 1427121522209
+DEBUG: Microbenchmarking examples.FactorialBenchmark.recursive()
+DEBUG: entering trials loop at 1427121522302
+DEBUG: MAX TRIALS is 810
+examples.FactorialBenchmark:tailRecursive():[number:int:5]
+{ size: 81, mean: 6.34814814814815, variance: 0.40277777777777796, std_deviation: 0.6346477588219925, lowest: 6.0, highest: 8.0, }
+DEBUG: statistical model validated
+DEBUG: exited trials loop at 1427121533519
+DEBUG: Microbenchmarking examples.FactorialBenchmark.iterative()
+DEBUG: entering trials loop at 1427121533558
+DEBUG: MAX TRIALS is 810
+examples.FactorialBenchmark:recursive():[number:int:5]
+{ size: 140, mean: 7.221428571428568, variance: 0.1736382322713256, std_deviation: 0.4166992107879803, lowest: 7.0, highest: 8.0, }
+DEBUG: statistical model validated
+DEBUG: exited trials loop at 1427121533820
+DEBUG: Macrobenchmarking examples.FactorialBenchmark.mystery()
+DEBUG: entering trials loop at 1427121533820
+DEBUG: MAX TRIALS is 810
+examples.FactorialBenchmark:iterative():[number:int:5]
+{ size: 81, mean: 2.4370370370370367, variance: 0.39611111111111114, std_deviation: 0.6293735862833069, lowest: 2.0, highest: 5.0, }
+DEBUG: statistical model validated
+DEBUG: exited trials loop at 1427121533832
+DEBUG: benchmarking examples.FactorialBenchmark with parameters [number:int:10]
+DEBUG: Microbenchmarking examples.FactorialBenchmark.tailRecursive()
+DEBUG: entering trials loop at 1427121533849
+DEBUG: MAX TRIALS is 810
+examples.FactorialBenchmark:mystery():[number:int:5]
+{ size: 81, mean: 115518.51851851854, variance: 1.4851727777777777E10, std_deviation: 121867.66502143945, lowest: 34000.0, highest: 668000.0, }
+DEBUG: statistical model validated
+DEBUG: exited trials loop at 1427121533865
+DEBUG: Microbenchmarking examples.FactorialBenchmark.recursive()
+DEBUG: entering trials loop at 1427121533867
+DEBUG: MAX TRIALS is 810
+examples.FactorialBenchmark:tailRecursive():[number:int:10]
+{ size: 81, mean: 15.760493827160492, variance: 19.076419753086416, std_deviation: 4.367656093728811, lowest: 13.0, highest: 40.0, }
+DEBUG: statistical model validated
+DEBUG: exited trials loop at 1427121533892
+DEBUG: Microbenchmarking examples.FactorialBenchmark.iterative()
+examples.FactorialBenchmark:recursive():[number:int:10]
+{ size: 113, mean: 13.716814159292037, variance: 4.990518331226296, std_deviation: 2.233946805818414, lowest: 13.0, highest: 25.0, }
+DEBUG: entering trials loop at 1427121533894
+DEBUG: MAX TRIALS is 810
+DEBUG: statistical model validated
+DEBUG: exited trials loop at 1427121533903
+DEBUG: Macrobenchmarking examples.FactorialBenchmark.mystery()
+DEBUG: entering trials loop at 1427121533903
+DEBUG: MAX TRIALS is 810
+examples.FactorialBenchmark:iterative():[number:int:10]
+{ size: 81, mean: 6.516049382716047, variance: 5.935864197530856, std_deviation: 2.4363629034958763, lowest: 4.0, highest: 15.0, }
+DEBUG: statistical model validated
+DEBUG: exited trials loop at 1427121533916
+DEBUG: benchmarking examples.FactorialBenchmark with parameters [number:int:20]
+DEBUG: Microbenchmarking examples.FactorialBenchmark.tailRecursive()
+DEBUG: entering trials loop at 1427121533949
+DEBUG: MAX TRIALS is 810
+examples.FactorialBenchmark:mystery():[number:int:10]
+{ size: 81, mean: 128654.32098765433, variance: 4.703554012345679E9, std_deviation: 68582.46140483498, lowest: 51000.0, highest: 426000.0, }
+DEBUG: statistical model validated
+DEBUG: exited trials loop at 1427121534213
+DEBUG: Microbenchmarking examples.FactorialBenchmark.recursive()
+DEBUG: entering trials loop at 1427121534255
+DEBUG: MAX TRIALS is 810
+examples.FactorialBenchmark:tailRecursive():[number:int:20]
+{ size: 81, mean: 30.20246913580247, variance: 22.755493827160493, std_deviation: 4.770271881891062, lowest: 26.0, highest: 46.0, }
+DEBUG: statistical model validated
+DEBUG: exited trials loop at 1427121534289
+DEBUG: Microbenchmarking examples.FactorialBenchmark.iterative()
+DEBUG: entering trials loop at 1427121534406
+DEBUG: MAX TRIALS is 810
+examples.FactorialBenchmark:recursive():[number:int:20]
+{ size: 90, mean: 31.095555555555556, variance: 7.118406991260928, std_deviation: 2.6680342934941685, lowest: 29.0, highest: 43.0, }
+DEBUG: exited trials loop at 1427121614091
+examples.FactorialBenchmark:iterative():[number:int:20]
+{ size: 810, mean: 9.253333333333329, variance: 0.255940667490729, std_deviation: 0.5059057891453003, lowest: 8.0, highest: 11.0, }
+DEBUG: failed to validate statistical model for examples.FactorialBenchmark:iterative():[number:int:20] after 810 trials
+failed to validate statistical model
+DEBUG: Macrobenchmarking examples.FactorialBenchmark.mystery()
+DEBUG: entering trials loop at 1427121614092
+DEBUG: MAX TRIALS is 810
+DEBUG: statistical model validated
+DEBUG: exited trials loop at 1427121614114
+examples.FactorialBenchmark:mystery():[number:int:20]
+{ size: 81, mean: 255790.12345679008, variance: 9.590017901234566E9, std_deviation: 97928.63677818948, lowest: 94000.0, highest: 437000.0, }
+
