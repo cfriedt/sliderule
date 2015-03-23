@@ -92,18 +92,20 @@ public final class Normal {
 		r = negative ? -xrow[ i ] : xrow[ i ];
 		return r;
 	}
-	public static double pdf( double x ) {
-		return Math.exp( -0.5 * Math.pow( x, 2 ) ) / Math.sqrt( 2 * Math.PI );
+	public static double pdf( double x, double u, double o ) {
+		return 1D / ( o * Math.sqrt( 2D * Math.PI ) ) * Math.exp( -0.5D * Math.pow( ( x - u ) / o , 2D ) );
 	}
-	public static double[] pdf( int size, double mean, double variance ) {
-		size |= 1; // odd number, so that zero is always there
+	public static double[] pdf( int size, double u, double o ) {
+		if ( size < 0 || o < 0 ) {
+			throw new IllegalArgumentException();
+		}
 		double[] xpdf = new double[ size ];
-		double step_size = 8D / size;
-		double left_side = -4;
-		double center;
+		double practically_inf = xtable[0][ xtable[0].length - 1 ];
+		double step_size = 2 * practically_inf / size;
 		int i;
-		for( i=0, center = left_side; i<size; i++, center += step_size ) {
-			double z = pdf( center );
+		double x;
+		for( i=0, x = -practically_inf; i<size; i++, x += step_size ) {
+			double z = pdf( x, u, o );
 			xpdf[ i ] = z;
 		}
 		return xpdf;

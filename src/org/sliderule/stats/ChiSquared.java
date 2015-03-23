@@ -249,15 +249,24 @@ public final class ChiSquared {
 	 * @param p the confidence level the test must satisfy
 	 * @return true if the null hypothesis is invalid - i.e. if {@code proto} is a good fit for {@code h}
 	 */
-	public static boolean test( double p, double[] proto, double[] h ) {
-		if ( null == proto || null == h || proto.length != h.length || 0 == proto.length ) {
+	public static boolean test( double p, boolean normalize, Histogram proto, Histogram hypothesis ) {
+		if ( null == proto || null == hypothesis || proto.size() != hypothesis.size() || 0 == proto.size() ) {
 			throw new IllegalArgumentException();
 		}
 		double sum = 0;
-		for( int i=0; i<proto.length; i++ ) {
-			sum += Math.pow( Math.abs( h[i] - proto[ i ] ), 2 ) / proto[ i ];
+		double[] proto_data;
+		double[] hypothesis_data;
+		if ( normalize ) {
+			proto_data = proto.normalizedData();
+			hypothesis_data = hypothesis.normalizedData();
+		} else {
+			proto_data = proto.data();
+			hypothesis_data = proto.data();
 		}
-		double x = inv( proto.length-1, p );
+		for( int i = 0; i < proto_data.length; i++ ) {
+			sum += Math.pow( Math.abs( hypothesis_data[ i ] - proto_data[ i ] ), 2 ) / proto_data[ i ];
+		}
+		double x = inv( proto_data.length - 1, p );
 		return sum <= x;
 	}
 }

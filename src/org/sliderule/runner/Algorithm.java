@@ -16,6 +16,7 @@
 
 package org.sliderule.runner;
 
+import java.io.*;
 import java.lang.reflect.*;
 import java.util.*;
 
@@ -60,7 +61,7 @@ class Algorithm {
 				),
 				OnlineStatistics.MIN_N_BEFORE_VALID_VARIANCE
 			);
-		MAX_TRIALS = 10 * MIN_TRIALS;
+		MAX_TRIALS = 30 * MIN_TRIALS;
 	}
 
 	private static class ClassAndInstance {
@@ -189,12 +190,6 @@ class Algorithm {
 		return end - start;
 	}
 
-	private void markMacro( AnnotatedClass k, Object o, Method m, int param_set )
-	throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
-	{
-		//throw new UnsupportedOperationException();
-	}
-
 	private static final long SAFE_NS_FOR_STABLE_REPS = 10000000000L;
 	private static final int MAX_REPS_FOR_STABLE_REPS = 1000000000;
 
@@ -276,7 +271,69 @@ class Algorithm {
 		return r;
 	}
 
-	private void markMicro( AnnotatedClass k, Object o, Method m, int param_set )
+	private void prepareMeasurements( SimpleTrial st, int reps, long trial_start_ms, long trial_start_ns, long trial_end_ns, OnlineStatistics ts, Object dummy ) {
+
+		SimpleMeasurement mean_ns_measurement = new SimpleMeasurement( "elapsed_time_ns", new PolymorphicType( double.class, ts.mean() ) );
+		SimpleMeasurement variance_ns_measurement = new SimpleMeasurement( "variance_ns", new PolymorphicType( double.class, ts.variance() ) );
+		SimpleMeasurement rep_measurement = new SimpleMeasurement( "reps", new PolymorphicType( int.class, reps ) );
+		SimpleMeasurement trial_start_ms_measurement = new SimpleMeasurement( "trial_start_ms", new PolymorphicType( long.class, trial_start_ms ) );
+		SimpleMeasurement trial_start_ns_measurement = new SimpleMeasurement( "trial_start_ns", new PolymorphicType( long.class, trial_start_ns ) );
+		SimpleMeasurement trial_end_ns_measurement = new SimpleMeasurement( "trial_end_ns", new PolymorphicType( long.class, trial_end_ns ) );
+		SimpleMeasurement dummy_measurement;
+
+		if ( null == dummy ) {
+			dummy_measurement = new SimpleMeasurement( "dummy", new PolymorphicType( String.class, "the dummy was null" ) );
+		} else {
+			dummy_measurement = new SimpleMeasurement( "dummy", new PolymorphicType( dummy.getClass(), "" + dummy ) );
+		}
+
+		st.addMeasurement( mean_ns_measurement );
+		st.addMeasurement( variance_ns_measurement );
+		st.addMeasurement( rep_measurement );
+		st.addMeasurement( trial_start_ms_measurement );
+		st.addMeasurement( trial_start_ns_measurement );
+		st.addMeasurement( trial_end_ns_measurement );
+		st.addMeasurement( dummy_measurement );
+	}
+
+	private boolean validateStatisticalModel( ArrayList<Trial> trials ) {
+
+		if ( trials.size() < MIN_TRIALS ) {
+			return false;
+		}
+
+		double[] elapsed_time_ns = new double[ trials.size() ];
+
+		int i=0;
+		for( Trial t: trials ) {
+			boolean found_elapsed_time_ns = false;
+			for( Measurement measure: t.measurements() ) {
+				if ( ( ! found_elapsed_time_ns ) && "elapsed_time_ns".equals( measure.description() ) ) {
+					elapsed_time_ns[ i ] = (double)(Double) measure.value().value;
+					found_elapsed_time_ns = true;
+					break;
+				}
+			}
+			if ( ! found_elapsed_time_ns ) {
+				throw new IllegalStateException();
+			}
+			i++;
+		}
+
+		OfflineStatistics elapsed_time_ns_stats = new OfflineStatistics( elapsed_time_ns );
+		Histogram elapsed_time_ns_hist = new Histogram( elapsed_time_ns_stats );
+
+		OfflineStatistics normal_stats = new OfflineStatistics( Normal.pdf( elapsed_time_ns_stats.size(), elapsed_time_ns_stats.mean(), elapsed_time_ns_stats.standardDeviation() ) );
+		Histogram normal_hist = new Histogram( elapsed_time_ns_hist.size(), normal_stats );
+		final boolean normalize = true;
+		boolean elapsed_time_ns_is_normally_distributed = ChiSquared.test( P_CONFIDENCE, normalize, normal_hist, elapsed_time_ns_hist );
+
+		boolean r = elapsed_time_ns_is_normally_distributed;
+		return r;
+	}
+
+
+	private void mark( boolean macro, AnnotatedClass k, Object o, Method m, int param_set )
 	throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
 	{
 		Object dummy;
@@ -295,7 +352,7 @@ class Algorithm {
 			b4.invoke( o );
 		}
 
-		final int reps = chooseReps( o, m );
+		int reps = macro ? 1 : chooseReps( o, m );
 		int trial;
 
 		UUID id = UUID.randomUUID();
@@ -311,7 +368,11 @@ class Algorithm {
 				trial_start_ms = System.currentTimeMillis();
 				trial_start_ns = System.nanoTime();
 
-				dummy = m.invoke( o, reps );
+				if ( macro ) {
+					dummy = m.invoke( o );
+				} else {
+					dummy = m.invoke( o, reps );
+				}
 
 				trial_end_ns = System.nanoTime();
 
@@ -319,16 +380,20 @@ class Algorithm {
 				average_elapsed_time = elapsed_ns / reps;
 				ts.update( average_elapsed_time );
 
-				if ( ! students_t_test_passed ) {
-					if ( ts.size() > 2 * AStatistics.MIN_N_BEFORE_VALID_VARIANCE ) {
-						students_t_test_passed = StudentsT.test( ts.size(), P_CONFIDENCE, ts.mean(), ts.standardDeviation() );
-						if ( !students_t_test_passed ) {
-							ts.clear();
+				if ( macro ) {
+					break;
+				} else {
+					if ( ! students_t_test_passed ) {
+						if ( ts.size() > 2 * AStatistics.MIN_N_BEFORE_VALID_VARIANCE ) {
+							students_t_test_passed = StudentsT.test( ts.size(), P_CONFIDENCE, ts.mean(), ts.standardDeviation() );
+							if ( !students_t_test_passed ) {
+								ts.clear();
+							}
 						}
 					}
-				}
-				if ( students_t_test_passed ) {
-					break;
+					if ( students_t_test_passed ) {
+						break;
+					}
 				}
 			}
 
@@ -351,71 +416,8 @@ class Algorithm {
 		}
 	}
 
-	private void prepareMeasurements( SimpleTrial st, int reps, long trial_start_ms, long trial_start_ns, long trial_end_ns, OnlineStatistics ts, Object dummy ) {
-
-		SimpleMeasurement mean_ns_measurement = new SimpleMeasurement( "elapsed_time_ns", new PolymorphicType( double.class, ts.mean() ) );
-		SimpleMeasurement variance_ns_measurement = new SimpleMeasurement( "variance_ns", new PolymorphicType( double.class, ts.variance() ) );
-		SimpleMeasurement rep_measurement = new SimpleMeasurement( "reps", new PolymorphicType( int.class, reps ) );
-		SimpleMeasurement trial_start_ms_measurement = new SimpleMeasurement( "trial_start_ms", new PolymorphicType( long.class, trial_start_ms ) );
-		SimpleMeasurement trial_start_ns_measurement = new SimpleMeasurement( "trial_start_ns", new PolymorphicType( long.class, trial_start_ns ) );
-		SimpleMeasurement trial_end_ns_measurement = new SimpleMeasurement( "trial_end_ns", new PolymorphicType( long.class, trial_end_ns ) );
-		SimpleMeasurement dummy_measurement;
-		if ( null == dummy ) {
-			dummy_measurement = new SimpleMeasurement( "dummy", new PolymorphicType( String.class, "the dummy was null" ) );
-		} else {
-			dummy_measurement = new SimpleMeasurement( "dummy", new PolymorphicType( dummy.getClass(), "" + dummy ) );
-		}
-
-		st.addMeasurement( mean_ns_measurement );
-		st.addMeasurement( variance_ns_measurement );
-		st.addMeasurement( rep_measurement );
-		st.addMeasurement( trial_start_ms_measurement );
-		st.addMeasurement( trial_start_ns_measurement );
-		st.addMeasurement( trial_end_ns_measurement );
-		st.addMeasurement( dummy_measurement );
-	}
-
-	private boolean validateStatisticalModel( ArrayList<Trial> trials ) {
-
-		if ( trials.size() < MIN_TRIALS ) {
-			return false;
-		}
-
-		double[] means = new double[ trials.size() ];
-
-		int i=0;
-		for( Trial t: trials ) {
-			boolean found_mean_ns = false;
-			for( Measurement measure: t.measurements() ) {
-				if ( ( ! found_mean_ns ) && "elapsed_time_ns".equals( measure.description() ) ) {
-					means[ i ] = (double)(Double) measure.value().value;
-					break;
-				}
-			}
-			i++;
-		}
-
-		OfflineStatistics means_stats = new OfflineStatistics( means );
-		Histogram means_hist = new Histogram( means_stats );
-		Histogram means_normal_hist = new Histogram( means_hist.data().length, Normal.pdf( means_stats.size(), means_stats.mean(), means_stats.variance() ) );
-		boolean means_are_normally_distributed = ChiSquared.test( P_CONFIDENCE, means_normal_hist.data(), means_hist.data() );
-
-		boolean r = means_are_normally_distributed;
-		return r;
-	}
-
-	private void mark( boolean macro, AnnotatedClass k, Object o, Method m, int param_set )
-	throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
-	{
-		if ( macro ) {
-			markMacro( k, o, m, param_set );
-		} else {
-			markMicro( k, o, m, param_set );
-		}
-	}
-
 	private void bench()
-	throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
+	throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException
 	{
 
 		for( ClassAndInstance cai: alcai ) {
@@ -452,13 +454,12 @@ class Algorithm {
 					for( Method m: k.getAfterExperimentMethods() ) {
 						m.invoke( o );
 					}
-
 				} catch( SkipThisScenarioException e ) {
 					continue;
 				}
-
 			}
 		}
+		context.results_processor.close();
 	}
 
 /*############################################################################
@@ -466,7 +467,7 @@ class Algorithm {
  *############################################################################*/
 
 	public static void evaluate( Arguments a, Context c )
-	throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, InterruptedException
+	throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, InterruptedException, IOException
 	{
 		if ( ! a.bench_classes.isEmpty() ) {
 			Algorithm algo = new Algorithm( a, c );
