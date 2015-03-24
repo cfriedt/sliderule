@@ -10,20 +10,21 @@ Options:
  -m, --vm           comma-separated list of VMs to test on; possible values are
                     configured in Caliper's configuration file (default:
                     whichever VM caliper itself is running in, only)
- -i, --instrument   comma-separated list of measuring instruments to use; possible 
-                    values are configured in Caliper's configuration file 
+ -i, --instrument   comma-separated list of measuring instruments to use; possible
+                    values are configured in Caliper's configuration file
                     (default: "allocation,runtime")
- -t, --trials       number of independent trials to peform per benchmark scenario; 
+ -t, --trials       number of independent trials to peform per benchmark scenario;
                     a positive integer (default: 1)
- -l, --time-limit   maximum length of time allowed for a single trial; use 0 to allow 
-                    trials to run indefinitely. (default: 30s) 
+ -l, --time-limit   maximum length of time allowed for a single trial; use 0 to allow
+                    trials to run indefinitely. (default: 30s)
  -r, --run-name     a user-friendly string used to identify the run
  -p, --print-config print the effective configuration that will be used by Caliper
  -d, --delimiter    separator used in options that take multiple values (default: ',')
  -c, --config       location of Caliper's configuration file (default:
                     $HOME/.caliper/config.properties)
- --directory        location of Caliper's configuration and data directory 
+ --directory        location of Caliper's configuration and data directory
                     (default: $HOME/.caliper)
+ --debug            integer debug level (default is -1, messages printed to stderr)
 
  -Dparam=val1,val2,...
      Specifies the values to inject into the 'param' field of the benchmark
@@ -31,7 +32,7 @@ Options:
      will try all possible combinations.
 
  -CconfigProperty=value
-     Specifies a value for any property that could otherwise be specified in 
+     Specifies a value for any property that could otherwise be specified in
      $HOME/.caliper/config.properties. Properties specified on the command line
      will override those specified in the file.
 

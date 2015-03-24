@@ -61,7 +61,7 @@ class Algorithm {
 				),
 				OnlineStatistics.MIN_N_BEFORE_VALID_VARIANCE
 			);
-		MAX_TRIALS = 30 * MIN_TRIALS;
+		MAX_TRIALS = 10 * MIN_TRIALS;
 	}
 
 	private static class ClassAndInstance {
@@ -75,11 +75,20 @@ class Algorithm {
 		}
 	}
 
-	private static boolean verbose = true;
-	private static void D( Object o ) {
-		if ( verbose ) {
-			System.out.println( "" + o );
+	private static int verbose = 0;
+	private static void Dn( int n, Object o ) {
+		if ( n <= verbose ) {
+			System.err.println( "DEBUG: " + o );
 		}
+	}
+	private static void D( Object o ) {
+		Dn( 0, o );
+	}
+	private static void D1( Object o ) {
+		Dn( 1, o );
+	}
+	private static void D2( Object o ) {
+		Dn( 2, o );
 	}
 
 /*############################################################################
@@ -191,30 +200,55 @@ class Algorithm {
 	}
 
 	private static final long SAFE_NS_FOR_STABLE_REPS = 10000000000L;
-	private static final int MAX_REPS_FOR_STABLE_REPS = 1000000000;
+	private static final int MAX_REPS_FOR_STABLE_REPS = 100000000;
 
-	private int quickChooseReps( int[] reps, double[] average_elapsed_ns, int n ) {
+	/**
+	 * Find the index of the first root of {@code f}.
+	 * @param f a series of samples
+	 * @param n the number of valid samples in f
+	 * @return the index of the first root, or -1 if no root was found
+	 * @see <a href="http://en.wikipedia.org/wiki/Newton's_method">The Newton-Raphson Method</a>
+	 */
+	private static int newtonRaphson( double[] f, int n ) {
 		int r = -1;
+
 		double[] diff = new double[ n - 1 ];
 		for( int i = 0; i < diff.length; i++ ) {
 			if ( 0 == i || diff.length - 1 == i ) {
-				diff[ i ] = average_elapsed_ns[ i+1 ] - average_elapsed_ns[ i ];
+				diff[ i ] = f[ i + 1 ] - f[ i ];
 			} else {
-				diff[ i ] = ( average_elapsed_ns[ i+1 ] - average_elapsed_ns[ i - 1 ] ) / 2;
+				diff[ i ] = ( f[ i + 1 ] - f[ i - 1 ] ) / 2;
 			}
 		}
+
+		D2( "1st derivative of f is " + Arrays.toString( diff ) );
+
 
 		for( int i = 0; i < diff.length; i++ ) {
 			if ( 0 == diff[ i ] ) {
-				r = reps[ i ];
+				r = i;
+				D2( "found root at index " + i );
 				break;
 			}
 		}
+		return r;
+	}
 
+	/**
+	 * Find the index of the first minimum of {@code f}.
+	 * @param f a series of samples
+	 * @param n the number of valid samples in f
+	 * @return the index of the first minimum, or -1 if no minimum was found
+	 * @see <a href="http://en.wikipedia.org/wiki/Newton%27s_method_in_optimization">Newton's Method in Optimization</a>
+	 */
+	private static int newton( double[] f, int n ) {
+		int r = -1;
+		// equivalent to 3-point centered-difference, but does not require calculating difference
 		if ( -1 == r ) {
 			for( int i = 0; i < n; i++ ) {
 				if ( i > 0 && i < n - 1 ) {
-					if ( average_elapsed_ns[ i ] > average_elapsed_ns[ i ] && average_elapsed_ns[ i + 1 ] > average_elapsed_ns[ i ] ) {
+					if ( f[ i ] > f[ i ] && f[ i + 1 ] > f[ i ] ) {
+						D2( "found minimum at index " + i );
 						r = i;
 					}
 				}
@@ -222,6 +256,7 @@ class Algorithm {
 		}
 		return r;
 	}
+
 	private int chooseReps( Object o, Method m )
 	throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
 	{
@@ -233,10 +268,14 @@ class Algorithm {
 		long end_ns;
 		long elapsed_ns;
 
+		D2( "choosing number of reps to use for method " + m );
+
 		Object dummy, dummy2;
 
 		// populate reps with orders of magnitude
 		for( int i = 0, j = 1; i < reps.length; reps[ i ] = j, i++, j *= 10 );
+
+		D2( "warming up method " + m + " with " + N_WARMUP_REPS + " calls" );
 
 		// warm-up
 		dummy = m.invoke( o, N_WARMUP_REPS );
@@ -253,13 +292,24 @@ class Algorithm {
 				dummy = dummy2;
 			}
 
-			int r2 = quickChooseReps( reps, average_elapsed_ns, i+1 );
+			D2( "averaged_elapsed_ns[] is " + Arrays.toString( Arrays.copyOf( average_elapsed_ns, i+1 ) ) );
+
+			D2( "trying Newton-Raphson" );
+			int r2 = newtonRaphson( average_elapsed_ns, i+1 );
 			if ( -1 != r2 ) {
-				r = r2;
+				r = reps[ r2 ];
+				break;
+			}
+
+			D2( "trying Newton" );
+			r2 = newton( average_elapsed_ns, i+1 );
+			if ( -1 != r2 ) {
+				r = reps[ r2 ];
 				break;
 			}
 
 			if ( elapsed_ns >= SAFE_NS_FOR_STABLE_REPS ) {
+				D( "stability time limit exceeded");
 				break;
 			}
 		}
@@ -267,6 +317,8 @@ class Algorithm {
 		if ( -1 == r ) {
 			r = reps[ reps.length - 1 ];
 		}
+
+		D1( "chose " + r + " reps" );
 
 		return r;
 	}
@@ -299,8 +351,11 @@ class Algorithm {
 	private boolean validateStatisticalModel( ArrayList<Trial> trials ) {
 
 		if ( trials.size() < MIN_TRIALS ) {
+			D2( "will not validate statistical model with less than MIN_TRIALS ( " + MIN_TRIALS +" ) samples"  );
 			return false;
 		}
+
+		D1( "checking statistical model based on " + trials.size() + " samples" );
 
 		double[] elapsed_time_ns = new double[ trials.size() ];
 
@@ -321,26 +376,41 @@ class Algorithm {
 		}
 
 		OfflineStatistics elapsed_time_ns_stats = new OfflineStatistics( elapsed_time_ns );
-		Histogram elapsed_time_ns_hist = new Histogram( elapsed_time_ns_stats );
+		// XXX: not a guarantee that "optimal" histogram size will be long enough to calculate variance
+		int sz = Histogram.partition( elapsed_time_ns_stats );
+		if ( sz <= AStatistics.MIN_N_BEFORE_VALID_VARIANCE ) {
+			D2( "'optimal' histogram size was only " + sz + ". padding out to " + (AStatistics.MIN_N_BEFORE_VALID_VARIANCE + 1) );
+			sz = AStatistics.MIN_N_BEFORE_VALID_VARIANCE + 1;
+		}
+		Histogram elapsed_time_ns_hist = new Histogram( sz, elapsed_time_ns_stats );
+		D2( "observed histogram is " + Arrays.toString( elapsed_time_ns_hist.data() ) );
 
 		OfflineStatistics normal_stats = new OfflineStatistics( Normal.pdf( elapsed_time_ns_stats.size(), elapsed_time_ns_stats.mean(), elapsed_time_ns_stats.standardDeviation() ) );
 		Histogram normal_hist = new Histogram( elapsed_time_ns_hist.size(), normal_stats );
+		D2( "observed histogram is " + Arrays.toString( normal_hist.data() ) );
 		final boolean normalize = true;
-		boolean elapsed_time_ns_is_normally_distributed = ChiSquared.test( P_CONFIDENCE, normalize, normal_hist, elapsed_time_ns_hist );
 
-		boolean r = elapsed_time_ns_is_normally_distributed;
-		return r;
+		boolean elapsed_time_ns_is_normally_distributed = false;
+
+		elapsed_time_ns_is_normally_distributed = ChiSquared.test( P_CONFIDENCE, normalize, normal_hist, elapsed_time_ns_hist );
+
+		if ( elapsed_time_ns_is_normally_distributed ) {
+			D( "statistical model validated" );
+		}
+		return elapsed_time_ns_is_normally_distributed;
 	}
 
 
 	private void mark( boolean macro, AnnotatedClass k, Object o, Method m, int param_set )
 	throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
 	{
-		Object dummy;
+		Object dummy = null;
+		final boolean dry_run = arguments.dry_run;
 		long trial_start_ns = 0;
 		long trial_end_ns = 0;
 		long elapsed_ns = 0;
 		long trial_start_ms = 0;
+		long trial_stop_ms = 0;
 		double average_elapsed_time;
 		boolean students_t_test_passed = false;
 		boolean validated_statistical_model = false;
@@ -348,30 +418,44 @@ class Algorithm {
 		ArrayList<Trial> trials = new ArrayList<Trial>();
 		OnlineStatistics ts = new OnlineStatistics();
 
-		for( Method b4: k.getBeforeExperimentMethods() ) {
-			b4.invoke( o );
-		}
-
 		int reps = macro ? 1 : chooseReps( o, m );
-		int trial;
 
 		UUID id = UUID.randomUUID();
 
+		D( "entering trials loop at " + System.currentTimeMillis() );
+
+		D( "MAX TRIALS is " + MAX_TRIALS );
+
 		// proceed until the result of the trials is statistically significant
-		for( trial=0; ! validated_statistical_model && trial < MAX_TRIALS; trial++ ) {
+		for( ; ! validated_statistical_model && trials.size() < MAX_TRIALS; ) {
+
+			if ( macro ) {
+				for( Method b4: k.getBeforeRepMethods() ) {
+					b4.invoke( o );
+				}
+			}
 
 			SimpleTrial st = new SimpleTrial( id, k.getAnnotatedClass(), m, param_fields, param_values[ param_set ] );
 			ts.clear();
 
+			trial_start_ms = System.currentTimeMillis();
+			D2( "starting trial at " + trial_start_ms );
+			trial_stop_ms = arguments.time_limit >= 0 ? ( trial_start_ms + 1000 * arguments.time_limit ): 0;
+			if ( 0 != trial_stop_ms ) {
+				D2( "trial must finish by " + trial_stop_ms );
+			}
+
+			D2( "entering reps loop" );
 			for( ;; ) {
 
-				trial_start_ms = System.currentTimeMillis();
 				trial_start_ns = System.nanoTime();
 
-				if ( macro ) {
-					dummy = m.invoke( o );
-				} else {
-					dummy = m.invoke( o, reps );
+				if ( ! dry_run ) {
+					if ( macro ) {
+						dummy = m.invoke( o );
+					} else {
+						dummy = m.invoke( o, reps );
+					}
 				}
 
 				trial_end_ns = System.nanoTime();
@@ -380,39 +464,53 @@ class Algorithm {
 				average_elapsed_time = elapsed_ns / reps;
 				ts.update( average_elapsed_time );
 
+				if ( 0 != trial_stop_ms && System.currentTimeMillis() >= trial_stop_ms ) {
+					D( "breaking out of reps loop because time limit was exceeded"  );
+					break;
+				}
+
 				if ( macro ) {
+					D2( "breaking out of reps loop because method is macrobenchmark " );
 					break;
 				} else {
 					if ( ! students_t_test_passed ) {
 						if ( ts.size() > 2 * AStatistics.MIN_N_BEFORE_VALID_VARIANCE ) {
 							students_t_test_passed = StudentsT.test( ts.size(), P_CONFIDENCE, ts.mean(), ts.standardDeviation() );
 							if ( !students_t_test_passed ) {
+								D2("failed Student's t-test");
 								ts.clear();
 							}
 						}
 					}
 					if ( students_t_test_passed ) {
+						D2("breaking out of reps loop because measurements passed Student's t-test");
 						break;
 					}
 				}
 			}
 
+			D2( "exited reps loop" );
+
 			prepareMeasurements( st, reps, trial_start_ms, trial_start_ns, trial_end_ns, ts, dummy );
 			context.results_processor.processTrial( st );
 			trials.add( st );
-
 			validated_statistical_model = validateStatisticalModel( trials );
+
+			if ( macro ) {
+				for( Method aft: k.getAfterRepMethods() ) {
+					aft.invoke( o );
+				}
+			}
 		}
 
-		if ( trial >= MAX_TRIALS ) {
+		D( "exited trials loop at " + System.currentTimeMillis() );
+
+		if ( trials.size() >= MAX_TRIALS ) {
+			D( "failed to validate statistical model for " + trials.get( 0 ) + " after " + trials.size() + " trials");
 			SimpleTrial warning_trial = new SimpleTrial( id, k.getAnnotatedClass(), m, param_fields, param_values[ param_set ] );
 			SimpleMeasurement warning_measurement = new SimpleMeasurement( "warning", new PolymorphicType( String.class, new String( "failed to validate statistical model" ) ) );
 			warning_trial.addMeasurement( warning_measurement );
 			context.results_processor.processTrial( warning_trial );
-		}
-
-		for( Method aft: k.getAfterExperimentMethods() ) {
-			aft.invoke( o );
 		}
 	}
 
@@ -433,6 +531,8 @@ class Algorithm {
 					f.set( o, param_values[ row ][ col ].value );
 				}
 
+				D( "benchmarking " + cai.klass.getAnnotatedClass().getName() + " with parameters " + nameParams( param_fields, param_values[row] ) );
+
 				try {
 
 					// allow the benchmarking class to perform some misc tasks before executing a set of trials
@@ -442,11 +542,13 @@ class Algorithm {
 
 					// perform micro benchmarking (slightly more complicated than macrobenchmarking)
 					for( Method m: k.getBenchmarkMethods() ) {
+						D( "Microbenchmarking " + cai.klass.getAnnotatedClass().getName() + "." + m.getName() + "()" );
 						mark( false, k, o, m, row );
 					}
 
 					// perform macro benchmarking
 					for( Method m: k.getMacrobenchmarkMethods() ) {
+						D( "Macrobenchmarking " + cai.klass.getAnnotatedClass().getName() + "." + m.getName() + "()" );
 						mark( true, k, o, m, row );
 					}
 
@@ -469,10 +571,33 @@ class Algorithm {
 	public static void evaluate( Arguments a, Context c )
 	throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, InterruptedException, IOException
 	{
+		verbose = a.debug;
+
 		if ( ! a.bench_classes.isEmpty() ) {
 			Algorithm algo = new Algorithm( a, c );
 			algo.setup();
 			algo.bench();
 		}
+	}
+	static String nameTrial( Class<?> bench_class, Method method, Field[] param, PolymorphicType[] param_value ) {
+		String r = "";
+		r += bench_class.getName() + ":" + method.getName() + "():";
+		r += nameParams( param, param_value );
+		return r;
+	}
+	static String nameParams( Field[] param, PolymorphicType[] param_value ) {
+		String r = "[";
+		if ( !( null == param || 0 == param.length ) ) {
+			for( int i=0; i<param.length; i++ ) {
+				r += param[ i ].getName();
+				r += ":";
+				r += param_value[ i ];
+				if ( i < param.length - 1 ) {
+					r += ",";
+				}
+			}
+		}
+		r += "]";
+		return r;
 	}
 }

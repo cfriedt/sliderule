@@ -250,8 +250,11 @@ public final class ChiSquared {
 	 * @return true if the null hypothesis is invalid - i.e. if {@code proto} is a good fit for {@code h}
 	 */
 	public static boolean test( double p, boolean normalize, Histogram proto, Histogram hypothesis ) {
-		if ( null == proto || null == hypothesis || proto.size() != hypothesis.size() || 0 == proto.size() ) {
+		if ( null == proto || null == hypothesis || proto.size() != hypothesis.size() ) {
 			throw new IllegalArgumentException();
+		}
+		if ( 0 == proto.size() ) {
+			return false;
 		}
 		double sum = 0;
 		double[] proto_data;

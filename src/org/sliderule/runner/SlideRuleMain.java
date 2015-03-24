@@ -20,6 +20,10 @@ import java.io.*;
 import java.lang.reflect.*;
 import java.util.*;
 
+import org.sliderule.api.*;
+
+import com.apple.laf.ClientPropertyApplicator.*;
+
 public final class SlideRuleMain {
 	private SlideRuleMain() {}
 	private Arguments arguments = new Arguments();
@@ -168,6 +172,21 @@ public final class SlideRuleMain {
 						throw sfnfe;
 					}
 					continue;
+				} else if ( "--debug".equals( arg[ i ] ) ) {
+					if ( i+1 >= arg.length ) {
+						SpecificMissingArgumentException smae = new SpecificMissingArgumentException();
+						smae.option_given = arg[i];
+						throw smae;
+					}
+					i++;
+					try {
+						arguments.debug = Integer.parseInt( arg[i] );
+					} catch( NumberFormatException e ) {
+						SpecificIllegalArgumentException siae = new SpecificIllegalArgumentException();
+						siae.option_given = arg[i];
+						throw siae;
+					}
+					continue;
 				} else if ( arg[i].startsWith( "-D" ) ) {
 					String[] prop = arg[i].substring( "-D".length() ).split( "=" );
 					if ( prop.length != 2 ) {
@@ -250,13 +269,20 @@ public final class SlideRuleMain {
 	}
 
 	private void setup()
-	throws NonUniformBenchmarkClassesException
+	throws NonUniformBenchmarkClassesException, ClassNotFoundException, InstantiationException, IllegalAccessException
 	{
 		AnnotatedClass prev_ac = null;
 
 		for( Class<?> klass: arguments.bench_classes ) {
 
 			AnnotatedClass ac = new AnnotatedClass( klass );
+
+			if ( arguments.config_properties.containsKey( "results.console.class" ) ) {
+				ClassLoader cl = ClassLoader.getSystemClassLoader();
+				Class<ResultProcessor> crp = (Class<ResultProcessor>) cl.loadClass( arguments.config_properties.getProperty( "results.console.class" ) );
+				ResultProcessor rp = (ResultProcessor) crp.newInstance();
+				context.setResultProcessor( rp );
+			}
 
 			if ( null == prev_ac ) {
 				if ( ! ( ac.getBenchmarkMethods().isEmpty() && ac.getMacrobenchmarkMethods().isEmpty() ) ) {
@@ -320,6 +346,8 @@ public final class SlideRuleMain {
 		} catch ( InterruptedException e ) {
 			e.printStackTrace();
 		} catch ( IOException e ) {
+			e.printStackTrace();
+		} catch ( ClassNotFoundException e ) {
 			e.printStackTrace();
 		}
 		if ( 0 != return_val || srm.arguments.help ) {

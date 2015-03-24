@@ -21,7 +21,8 @@ import java.util.*;
 
 final class Arguments {
 	static final String HOME;
-	
+
+	int debug = -1;
 	boolean help = false;
 	boolean dry_run = false;
 	List<String> benchmark = new ArrayList<String>();
@@ -36,9 +37,9 @@ final class Arguments {
 	File directory = new File( HOME + File.separator + ".sliderule" );
 	Properties parameters = new Properties();
 	Properties config_properties = new Properties();
-	
+
 	List<Class<?>> bench_classes = new ArrayList<Class<?>>();
-	
+
 	static {
 		HOME = "" + System.getenv().get( "HOME" );
 	}
