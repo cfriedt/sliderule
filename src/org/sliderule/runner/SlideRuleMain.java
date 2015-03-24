@@ -316,20 +316,14 @@ public final class SlideRuleMain {
 		System.out.print( UsageString.usage_string );
 	}
 
-	public static SlideRuleMain mainNoExit( String[] arg )
-	throws SpecificMissingArgumentException, SpecificIllegalArgumentException, SpecificFileNotFoundException, SpecificIllegalPropertyException, SpecificClassNotFoundException, HelpException, ClassNotFoundException, InstantiationException, IllegalAccessException, NonUniformBenchmarkClassesException, IllegalArgumentException, InvocationTargetException, InterruptedException, IOException
-	{
-		SlideRuleMain srm = new SlideRuleMain();
-		srm.parseArguments( arg );
-		srm.setup();
-		srm.go();
-		return srm;
-	}
 	public static void main( String[] arg ) {
 		int return_val = -1;
 		SlideRuleMain srm = null;
 		try {
-			srm = mainNoExit( arg );
+			srm = new SlideRuleMain();
+			srm.parseArguments( arg );
+			srm.setup();
+			srm.go();
 			return_val = 0;
 		} catch ( SpecificClassNotFoundException e ) {
 			System.err.println( "could not load class '" + e.name + "'" );

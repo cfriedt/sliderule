@@ -22,7 +22,7 @@ public class FactorialTest {
 			"-Cresults.console.class=org.sliderule.runner.InMemoryResultProcessor",
 			FactorialBenchmark.class.getName()
 		};
-		SlideRuleMain.mainNoExit( arg );
+		SlideRuleMain.main( arg );
 	}
 
 	@Test
