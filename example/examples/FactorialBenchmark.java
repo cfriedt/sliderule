@@ -67,13 +67,13 @@ public final class FactorialBenchmark {
 		for( int i=0; i < reps; i++ ) {
 			switch( opt ) {
 			case 0:
-				dummy |= Factorial.iterative( number );
+				dummy += Factorial.iterative( number );
 				break;
 			case 1:
-				dummy |= Factorial.recursive( number );
+				dummy += Factorial.recursive( number );
 				break;
 			case 2:
-				dummy |= Factorial.tailRecursive( number, 1 );
+				dummy += Factorial.tailRecursive( number, 1 );
 				break;
 			}
 		}

@@ -13,10 +13,12 @@ public class ConsoleResultProcessor implements ResultProcessor {
 		UUID id;
 		Trial proto;
 		OnlineStatistics os = new OnlineStatistics();
+		int reps;
 		@Override
 		public String toString() {
 			String r = "";
 			r += proto.toString() + "\n";
+			r += "reps: " + reps + ", ";
 			r += os;
 			return r;
 		}
@@ -44,10 +46,16 @@ public class ConsoleResultProcessor implements ResultProcessor {
 			}
 			ts.id = trial.id();
 			ts.proto = trial;
+			ts.reps = -1;
 		}
 
 		for( Measurement m: trial.measurements() ) {
 			switch( m.description() ) {
+			case "reps":
+				if ( -1 == ts.reps ) {
+					ts.reps = (int)m.value().value;
+				}
+				break;
 			case "elapsed_time_ns":
 				ts.os.update( (double)(Double) m.value().value );
 				break;

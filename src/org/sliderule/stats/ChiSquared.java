@@ -247,15 +247,17 @@ public final class ChiSquared {
 	 * @param proto a reference distribution of the random variable {@code X}
 	 * @param h data sampled from the random variable {@code X}
 	 * @param p the confidence level the test must satisfy
+	 * @param offset ignore the first n bins of the hypothesis
 	 * @return true if the null hypothesis is invalid - i.e. if {@code proto} is a good fit for {@code h}
 	 */
-	public static boolean test( double p, boolean normalize, Histogram proto, Histogram hypothesis ) {
+	public static boolean test( double p, boolean normalize, Histogram proto, Histogram hypothesis, int offset ) {
 		if ( null == proto || null == hypothesis || proto.size() != hypothesis.size() ) {
 			throw new IllegalArgumentException();
 		}
 		if ( 0 == proto.size() ) {
 			return false;
 		}
+		int skipped = 0;
 		double sum = 0;
 		double[] proto_data;
 		double[] hypothesis_data;
@@ -266,10 +268,40 @@ public final class ChiSquared {
 			proto_data = proto.data();
 			hypothesis_data = proto.data();
 		}
-		for( int i = 0; i < proto_data.length; i++ ) {
-			sum += Math.pow( Math.abs( hypothesis_data[ i ] - proto_data[ i ] ), 2 ) / proto_data[ i ];
+		for( int i=0; i < proto_data.length - offset; i++ ) {
+			double num = Math.pow( Math.abs( hypothesis_data[ i + offset ] - proto_data[ i ] ), 2 );
+			// Chi-Squared becomes unusable if one of proto_data ( a.k.a. 'Ei' ) is 0
+			// The solution is that we just skip those values and compute with the
+			// remaining non-zero samples, subtracting 1 from the degrees of freedom.
+			if ( 0.0 == proto_data[ i ] ) {
+				skipped++;
+				continue;
+			}
+			double den = proto_data[ i ];
+			double quotient = num / den;
+			sum +=  quotient;
 		}
-		double x = inv( proto_data.length - 1, p );
+		double x;
+		try {
+			x = inv( proto_data.length - offset - skipped - 1, p );
+		} catch( IllegalArgumentException e ) {
+			return false;
+		}
 		return sum <= x;
+	}
+
+	/**
+	 * Perform a &Chi;&sup2; test to determine if the sampled values,
+	 * {@code h}, are a good fit for the prototypical distribution,
+	 * {@code proto}.
+	 * The <a href="http://en.wikipedia.org/wiki/Null_hypothesis">null hypothesis</a>
+	 * is that the distribution is not a good fit.
+	 * @param proto a reference distribution of the random variable {@code X}
+	 * @param h data sampled from the random variable {@code X}
+	 * @param p the confidence level the test must satisfy
+	 * @return true if the null hypothesis is invalid - i.e. if {@code proto} is a good fit for {@code h}
+	 */
+	public static boolean test( double p, boolean normalize, Histogram proto, Histogram hypothesis ) {
+		return test( p, normalize, proto, hypothesis, 0 );
 	}
 }

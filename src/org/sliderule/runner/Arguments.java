@@ -28,7 +28,7 @@ final class Arguments {
 	List<String> benchmark = new ArrayList<String>();
 	List<String> vm = new ArrayList<String>();
 	List<String> instrument = new ArrayList<String>();
-	int trials = 1;
+	int max_trials = 30;
 	int time_limit = 30;
 	String run_name;
 	boolean print_config;

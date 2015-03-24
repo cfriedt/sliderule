@@ -20,7 +20,6 @@ import java.util.*;
  *   </ul>
  */
 public class OfflineStatistics extends AStatistics {
-	public static final int MIN_N_BEFORE_VALID_VARIANCE = 2;
 
 	final double[] data;
 	final double[] ordered_data;

@@ -100,11 +100,11 @@ public final class Normal {
 			throw new IllegalArgumentException();
 		}
 		double[] xpdf = new double[ size ];
-		double practically_inf = xtable[0][ xtable[0].length - 1 ];
+		double practically_inf = xtable[ 0 ][ xtable[ 0 ].length - 1 ];
 		double step_size = 2 * practically_inf / size;
 		int i;
 		double x;
-		for( i=0, x = -practically_inf; i<size; i++, x += step_size ) {
+		for( i = 0, x = -practically_inf; i < size; i++, x += step_size ) {
 			double z = pdf( x, u, o );
 			xpdf[ i ] = z;
 		}

@@ -1,9 +1,7 @@
 package org.sliderule.runner;
 
-import java.io.*;
 import java.util.*;
 
-import org.sliderule.api.*;
 import org.sliderule.model.*;
 import org.sliderule.stats.*;
 
@@ -48,14 +46,6 @@ public class InMemoryResultProcessor extends ConsoleResultProcessor {
 			switch( m.description() ) {
 			case "elapsed_time_ns":
 				trial_summary.os.update( (double)(Double) m.value().value );
-				break;
-			case "warning":
-				System.out.println( trial_summary );
-				System.out.flush();
-				System.err.println( "" + m.value().value );
-				System.err.flush();
-				trial_summary.id = null;
-				trial_summary.os.clear();
 				break;
 			default:
 				break;

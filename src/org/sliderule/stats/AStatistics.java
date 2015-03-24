@@ -25,14 +25,12 @@ public abstract class AStatistics implements IStatistics {
 	@Override
 	public String toString() {
 		String r = "";
-		r += "{ ";
 		r += "size: " + size() + ", ";
 		r += "mean: " + mean() + ", ";
 		r += "variance: " + variance() + ", ";
 		r += "std_deviation: " + standardDeviation() + ", ";
 		r += "lowest: " + lowest() + ", ";
 		r += "highest: " + highest() + ", ";
-		r += "}";
 		return r;
 	}
 }

@@ -112,9 +112,46 @@ public class ChiSquaredTest {
  			expected[ i ] = proto[ i ] * N;
 		}
 		boolean expected_pass = false;
-		final boolean normalize = false;
+		final boolean do_not_normalize = false;
+		// set the length manually here, as the size of the histogram can be small
+		boolean actual_pass = ChiSquared.test( 0.95, do_not_normalize, new Histogram( proto.length, expected ), new Histogram( observed.length, observed ) );
+		assertEquals( "expected the test to " + ( expected_pass ? "pass" : "fail"), expected_pass, actual_pass );
+	}
+	@Test
+	public void robustInPresenceOfZero() {
+		double proto[] = { 10, 8, 7, 6, 0, 4 };
+		double observed[] = { 20, 16, 14, 12, 10, 8 };
+		double N = 0;
+		for( int i=0; i<observed.length; i++ ) {
+			N += observed[i];
+		}
+		double expected[] = new double[ observed.length ];
+		for( int i=0; i<observed.length; i++ ) {
+ 			expected[ i ] = proto[ i ] * N;
+		}
+		boolean expected_pass = true;
+		final boolean normalize = true;
 		// set the length manually here, as the size of the histogram can be small
 		boolean actual_pass = ChiSquared.test( 0.95, normalize, new Histogram( proto.length, expected ), new Histogram( observed.length, observed ) );
+		assertEquals( "expected the test to " + ( expected_pass ? "pass" : "fail"), expected_pass, actual_pass );
+	}
+	@Test
+	public void shiftedWithZero() {
+		double proto[] = { 10, 8, 7, 6, 0, 4, 2 };
+		double observed[] = { 22, 20, 16, 14, 12, 10, 8 };
+		double N = 0;
+		for( int i=0; i<observed.length; i++ ) {
+			N += observed[i];
+		}
+		double expected[] = new double[ observed.length ];
+		for( int i=0; i<observed.length; i++ ) {
+ 			expected[ i ] = proto[ i ] * N;
+		}
+		boolean expected_pass = true;
+		final boolean normalize = true;
+		final int shift = 1;
+		// set the length manually here, as the size of the histogram can be small
+		boolean actual_pass = ChiSquared.test( 0.95, normalize, new Histogram( proto.length, expected ), new Histogram( observed.length, observed ), shift );
 		assertEquals( "expected the test to " + ( expected_pass ? "pass" : "fail"), expected_pass, actual_pass );
 	}
 }
