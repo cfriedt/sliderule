@@ -3,45 +3,7 @@ SLIDERULE
 
 This is SlideRule, a utility for benchmarking Java code.
 
-SlideRule maintains a vague level of API compatibility with [Google Caliper](https://code.google.com/p/caliper). In fact, the Google Caliper annotations were used as-is inside of SlideRule.
-
-The major differences between SlideRule and Caliper are:
-
-* SlideRule is simple to use. Caliper is less simple.
-* Caliper uses Maven as its build and packaging system (plugin system, execution system...) and therefore has several dependencies, while SlideRule has exactly zero dependencies. In fact, SlideRule does not impose any build system on its users at all.
-* Caliper hooks instrumentation classes into the JVM which prevent it from being simply executable from a single jar file. This provides a finer grain of benchmarking. SlideRule has opted to sacrifice fine-grained measurement for simplicity.
-* Caliper is able to measure the memory footprint on a per-class basis. SlideRule is primarily concerned with measuring execution times.
-
-Algorithm
----------
-
-Like Caliper, SlideRule uses a fairly straight-forward algorithm to approximate the execution time of Java code. Java uses a Just-In-Time (JIT) compiler that modifies code structure dynamically. This means that benchmarking resulst can change drastically from one invocation to the next. It is therefore important to ensure that the Java Virtual Machine is given sufficient time to finish JIT-compiling its version of the executing Java code before finally evaluating execution time.
-
-SlideRule uses a fairly straight-forward algorithm to achieve this. The assumption is that the variance in execution time will tend toward zero when the number of repetitions increases. SlideRule does a few fairly lightweight statistical calculations on the fly as code is executed a number of times until an accurate time estimation can be made.
-
-Additional Features
--------------------
-
-The SlideRule command line accepts multiple similar benchmark classes in a single invocation. These classes are executed, in turn, one after the other. This is useful when, say, several execution times of different algorithms must be compared based on the same set of parameters.
-
-SlideRule does not upload users' results to a cloud application. Any data that a user generates is never shared.
-
-USAGE
-=====
-
-```shell
-java -cp .:/path/to/sliderule.jar org.sliderule.runner.SlideRuleMain com.foo.MyBenchmark
-```
-
-EXAMPLE
-=======
-
-TODO
-
-STATUS
-======
-
-Not yet fit for public consumption.
+Please see http://cfriedt.github.io/sliderule/ for more information.
 
 LICENSE
 =======
