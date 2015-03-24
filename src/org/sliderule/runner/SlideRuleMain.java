@@ -94,7 +94,7 @@ public final class SlideRuleMain {
 					i++;
 					arguments.instrument = Arrays.asList( arg[i].split( arguments.delimiter ) );
 					continue;
-				} else if ( "-t".equals( arg[i] ) || "--trials".equals( arg[i] ) ) {
+				} else if ( "-t".equals( arg[i] ) || "--max-trials".equals( arg[i] ) ) {
 					if ( i+1 >= arg.length ) {
 						SpecificMissingArgumentException smae = new SpecificMissingArgumentException();
 						smae.option_given = arg[i];
@@ -102,7 +102,10 @@ public final class SlideRuleMain {
 					}
 					i++;
 					try {
-						arguments.trials = Integer.parseInt( arg[i] );
+						arguments.max_trials = Integer.parseInt( arg[i] );
+						if ( arguments.max_trials < 1 ) {
+							throw new NumberFormatException( "max trials is an integer factor > 1" );
+						}
 					} catch( NumberFormatException e ) {
 						SpecificIllegalArgumentException siae = new SpecificIllegalArgumentException();
 						siae.option_given = arg[i];
@@ -313,13 +316,20 @@ public final class SlideRuleMain {
 		System.out.print( UsageString.usage_string );
 	}
 
+	public static SlideRuleMain mainNoExit( String[] arg )
+	throws SpecificMissingArgumentException, SpecificIllegalArgumentException, SpecificFileNotFoundException, SpecificIllegalPropertyException, SpecificClassNotFoundException, HelpException, ClassNotFoundException, InstantiationException, IllegalAccessException, NonUniformBenchmarkClassesException, IllegalArgumentException, InvocationTargetException, InterruptedException, IOException
+	{
+		SlideRuleMain srm = new SlideRuleMain();
+		srm.parseArguments( arg );
+		srm.setup();
+		srm.go();
+		return srm;
+	}
 	public static void main( String[] arg ) {
 		int return_val = -1;
-		SlideRuleMain srm = new SlideRuleMain();
+		SlideRuleMain srm = null;
 		try {
-			srm.parseArguments( arg );
-			srm.setup();
-			srm.go();
+			srm = mainNoExit( arg );
 			return_val = 0;
 		} catch ( SpecificClassNotFoundException e ) {
 			System.err.println( "could not load class '" + e.name + "'" );
@@ -350,7 +360,7 @@ public final class SlideRuleMain {
 		} catch ( ClassNotFoundException e ) {
 			e.printStackTrace();
 		}
-		if ( 0 != return_val || srm.arguments.help ) {
+		if ( 0 != return_val || ( null != srm && srm.arguments.help ) ) {
 			usage();
 		}
 		System.exit( return_val );

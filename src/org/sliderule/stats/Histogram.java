@@ -184,8 +184,27 @@ public final class Histogram {
 	/**
 	 * The number of bins in the histogram.
 	 * @return the number of bins
+	 * @throws NoSuchElementException if the value x is not found within the bounds of any bin.
 	 */
 	public int size() {
 		return data.length;
+	}
+	public int bin( double x ) {
+		for( int i = 0; i < bin_centers.length; i++ ) {
+			double L = bin_centers[ i ] - bin_width;
+			double U = bin_centers[ i ] + bin_width;
+			if ( x >= L && x <= U ) {
+				return i;
+			}
+		}
+		throw new NoSuchElementException();
+	}
+	/**
+	 * Return the bin number containing the arithmetic mean of the backing data set.
+	 * @return the bin number
+	 * @throws NoSuchElementException if the value x is not found within the bounds of any bin.
+	 */
+	public int meanBin() {
+		return bin( is.mean() );
 	}
 }

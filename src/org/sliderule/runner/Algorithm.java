@@ -39,7 +39,14 @@ class Algorithm {
 	// confidence value of P_CONFIDENCE - i.e. there is ( 1 - P_CONFIDENCE ) chance for error.
 	static final double P_CONFIDENCE = 0.95;
 
-	final int MIN_TRIALS;
+	static final int MIN_TRIALS;
+	static {
+		MIN_TRIALS =
+			Math.max(
+				OnlineStatistics.MIN_N_BEFORE_VALID_VARIANCE,
+				ChiSquared.minSamples( Q_ACCEPTANCE, P_CONFIDENCE )
+			);
+	}
 	final int MAX_TRIALS;
 
 	final Arguments arguments;
@@ -53,25 +60,15 @@ class Algorithm {
 		this.arguments = arguments;
 		this.context = context;
 		this.alcai = new ArrayList<ClassAndInstance>();
-		MIN_TRIALS =
-			Math.max(
-				Math.max(
-					arguments.trials,
-					ChiSquared.minSamples( Q_ACCEPTANCE, P_CONFIDENCE )
-				),
-				OnlineStatistics.MIN_N_BEFORE_VALID_VARIANCE
-			);
-		MAX_TRIALS = 10 * MIN_TRIALS;
+		MAX_TRIALS = MIN_TRIALS * arguments.max_trials;
 	}
 
 	private static class ClassAndInstance {
 		public final AnnotatedClass klass;
 		public final Object instance;
-		public final ArrayList<Trial> trials;
 		public ClassAndInstance( AnnotatedClass klass, Object instance ) {
 			this.klass = klass;
 			this.instance = instance;
-			this.trials = new ArrayList<Trial>();
 		}
 	}
 
@@ -223,7 +220,6 @@ class Algorithm {
 
 		D2( "1st derivative of f is " + Arrays.toString( diff ) );
 
-
 		for( int i = 0; i < diff.length; i++ ) {
 			if ( 0 == diff[ i ] ) {
 				r = i;
@@ -275,9 +271,7 @@ class Algorithm {
 		// populate reps with orders of magnitude
 		for( int i = 0, j = 1; i < reps.length; reps[ i ] = j, i++, j *= 10 );
 
-		D2( "warming up method " + m + " with " + N_WARMUP_REPS + " calls" );
-
-		// warm-up
+		D( "warming up method " + m + " with " + N_WARMUP_REPS + " calls" );
 		dummy = m.invoke( o, N_WARMUP_REPS );
 
 		for( int i = 0; i < reps.length; i++ ) {
@@ -357,14 +351,14 @@ class Algorithm {
 
 		D1( "checking statistical model based on " + trials.size() + " samples" );
 
-		double[] elapsed_time_ns = new double[ trials.size() ];
+		double[] observed = new double[ trials.size() ];
 
 		int i=0;
 		for( Trial t: trials ) {
 			boolean found_elapsed_time_ns = false;
 			for( Measurement measure: t.measurements() ) {
 				if ( ( ! found_elapsed_time_ns ) && "elapsed_time_ns".equals( measure.description() ) ) {
-					elapsed_time_ns[ i ] = (double)(Double) measure.value().value;
+					observed[ i ] = (double)(Double) measure.value().value;
 					found_elapsed_time_ns = true;
 					break;
 				}
@@ -375,29 +369,24 @@ class Algorithm {
 			i++;
 		}
 
-		OfflineStatistics elapsed_time_ns_stats = new OfflineStatistics( elapsed_time_ns );
+		OfflineStatistics observed_stats = new OfflineStatistics( observed );
 		// XXX: not a guarantee that "optimal" histogram size will be long enough to calculate variance
-		int sz = Histogram.partition( elapsed_time_ns_stats );
+		int sz = Histogram.partition( observed_stats );
 		if ( sz <= AStatistics.MIN_N_BEFORE_VALID_VARIANCE ) {
 			D2( "'optimal' histogram size was only " + sz + ". padding out to " + (AStatistics.MIN_N_BEFORE_VALID_VARIANCE + 1) );
 			sz = AStatistics.MIN_N_BEFORE_VALID_VARIANCE + 1;
 		}
-		Histogram elapsed_time_ns_hist = new Histogram( sz, elapsed_time_ns_stats );
-		D2( "observed histogram is " + Arrays.toString( elapsed_time_ns_hist.data() ) );
+		Histogram observed_hist = new Histogram( sz, observed_stats );
+		OfflineStatistics normal_stats = new OfflineStatistics( Normal.pdf( observed_stats.size(), observed_stats.mean(), observed_stats.standardDeviation() ) );
+		Histogram normal_hist = new Histogram( observed_hist.size(), normal_stats );
 
-		OfflineStatistics normal_stats = new OfflineStatistics( Normal.pdf( elapsed_time_ns_stats.size(), elapsed_time_ns_stats.mean(), elapsed_time_ns_stats.standardDeviation() ) );
-		Histogram normal_hist = new Histogram( elapsed_time_ns_hist.size(), normal_stats );
-		D2( "observed histogram is " + Arrays.toString( normal_hist.data() ) );
 		final boolean normalize = true;
+		boolean r = ChiSquared.test( P_CONFIDENCE, normalize, normal_hist, observed_hist, observed_hist.meanBin() );
 
-		boolean elapsed_time_ns_is_normally_distributed = false;
-
-		elapsed_time_ns_is_normally_distributed = ChiSquared.test( P_CONFIDENCE, normalize, normal_hist, elapsed_time_ns_hist );
-
-		if ( elapsed_time_ns_is_normally_distributed ) {
+		if ( r ) {
 			D( "statistical model validated" );
 		}
-		return elapsed_time_ns_is_normally_distributed;
+		return r;
 	}
 
 
@@ -424,7 +413,8 @@ class Algorithm {
 
 		D( "entering trials loop at " + System.currentTimeMillis() );
 
-		D( "MAX TRIALS is " + MAX_TRIALS );
+		D( "MIN_TRIALS for " + P_CONFIDENCE + " confidence and " + Q_ACCEPTANCE + "std.dev acceptance is " + MIN_TRIALS );
+		D( "MAX_TRIALS is " + MAX_TRIALS );
 
 		// proceed until the result of the trials is statistically significant
 		for( ; ! validated_statistical_model && trials.size() < MAX_TRIALS; ) {
@@ -505,6 +495,13 @@ class Algorithm {
 
 		D( "exited trials loop at " + System.currentTimeMillis() );
 
+		byte[] line = null;
+		if ( arguments.debug >= 0 ) {
+			line = new byte[ 70 ];
+			Arrays.fill( line, (byte)'=' );
+			D( new String( line ) );
+		}
+
 		if ( trials.size() >= MAX_TRIALS ) {
 			D( "failed to validate statistical model for " + trials.get( 0 ) + " after " + trials.size() + " trials");
 			SimpleTrial warning_trial = new SimpleTrial( id, k.getAnnotatedClass(), m, param_fields, param_values[ param_set ] );
@@ -581,7 +578,7 @@ class Algorithm {
 	}
 	static String nameTrial( Class<?> bench_class, Method method, Field[] param, PolymorphicType[] param_value ) {
 		String r = "";
-		r += bench_class.getName() + ":" + method.getName() + "():";
+		r += bench_class.getName() + ":" + method.getName() + "().";
 		r += nameParams( param, param_value );
 		return r;
 	}

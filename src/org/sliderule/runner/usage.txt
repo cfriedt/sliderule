@@ -13,8 +13,10 @@ Options:
  -i, --instrument   comma-separated list of measuring instruments to use; possible
                     values are configured in Caliper's configuration file
                     (default: "allocation,runtime")
- -t, --trials       number of independent trials to peform per benchmark scenario;
-                    a positive integer (default: 1)
+ -t, --max-trials   independent trials to perform per benchmark scenario.
+                    factor of minimum statistically significant number of trials
+                    for confidence of 95% within 1/5 of a standard deviation;
+                    a positive integer (default: 30)
  -l, --time-limit   maximum length of time allowed for a single trial; use 0 to allow
                     trials to run indefinitely. (default: 30s)
  -r, --run-name     a user-friendly string used to identify the run

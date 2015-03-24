@@ -1,26 +1,25 @@
-examples.FactorialBenchmark:tailRecursive():[number:int:5]
-{ size: 81, mean: 6.34814814814815, variance: 0.40277777777777796, std_deviation: 0.6346477588219925, lowest: 6.0, highest: 8.0, }
-examples.FactorialBenchmark:recursive():[number:int:5]
-{ size: 140, mean: 7.221428571428568, variance: 0.1736382322713256, std_deviation: 0.4166992107879803, lowest: 7.0, highest: 8.0, }
-examples.FactorialBenchmark:iterative():[number:int:5]
-{ size: 81, mean: 2.4370370370370367, variance: 0.39611111111111114, std_deviation: 0.6293735862833069, lowest: 2.0, highest: 5.0, }
-examples.FactorialBenchmark:mystery():[number:int:5]
-{ size: 81, mean: 115518.51851851854, variance: 1.4851727777777777E10, std_deviation: 121867.66502143945, lowest: 34000.0, highest: 668000.0, }
-examples.FactorialBenchmark:tailRecursive():[number:int:10]
-{ size: 81, mean: 15.760493827160492, variance: 19.076419753086416, std_deviation: 4.367656093728811, lowest: 13.0, highest: 40.0, }
-examples.FactorialBenchmark:recursive():[number:int:10]
-{ size: 113, mean: 13.716814159292037, variance: 4.990518331226296, std_deviation: 2.233946805818414, lowest: 13.0, highest: 25.0, }
-examples.FactorialBenchmark:iterative():[number:int:10]
-{ size: 81, mean: 6.516049382716047, variance: 5.935864197530856, std_deviation: 2.4363629034958763, lowest: 4.0, highest: 15.0, }
-examples.FactorialBenchmark:mystery():[number:int:10]
-{ size: 81, mean: 128654.32098765433, variance: 4.703554012345679E9, std_deviation: 68582.46140483498, lowest: 51000.0, highest: 426000.0, }
-examples.FactorialBenchmark:tailRecursive():[number:int:20]
-{ size: 81, mean: 30.20246913580247, variance: 22.755493827160493, std_deviation: 4.770271881891062, lowest: 26.0, highest: 46.0, }
-examples.FactorialBenchmark:recursive():[number:int:20]
-{ size: 90, mean: 31.095555555555556, variance: 7.118406991260928, std_deviation: 2.6680342934941685, lowest: 29.0, highest: 43.0, }
-examples.FactorialBenchmark:iterative():[number:int:20]
-{ size: 810, mean: 9.253333333333329, variance: 0.255940667490729, std_deviation: 0.5059057891453003, lowest: 8.0, highest: 11.0, }
-failed to validate statistical model
-examples.FactorialBenchmark:mystery():[number:int:20]
-{ size: 81, mean: 255790.12345679008, variance: 9.590017901234566E9, std_deviation: 97928.63677818948, lowest: 94000.0, highest: 437000.0, }
+examples.FactorialBenchmark:tailRecursive().[number:int:5]
+reps: 10000000, size: 82, mean: 6.134146341463418, variance: 0.1669677807889192, std_deviation: 0.4086169120201943, lowest: 6.0, highest: 8.0, 
+examples.FactorialBenchmark:recursive().[number:int:5]
+reps: 10000, size: 81, mean: 8.259259259259258, variance: 61.66944444444444, std_deviation: 7.852989522751475, lowest: 7.0, highest: 77.0, 
+examples.FactorialBenchmark:iterative().[number:int:5]
+reps: 10000000, size: 81, mean: 2.024691358024692, variance: 0.024382716049382726, std_deviation: 0.1561496591395022, lowest: 2.0, highest: 3.0, 
+examples.FactorialBenchmark:mystery().[number:int:5]
+reps: 1, size: 81, mean: 144728.39506172834, variance: 2.929632530864196E10, std_deviation: 171161.69346159778, lowest: 45000.0, highest: 995000.0, 
+examples.FactorialBenchmark:tailRecursive().[number:int:10]
+reps: 100000, size: 81, mean: 14.493827160493828, variance: 8.153086419753087, std_deviation: 2.8553609963983693, lowest: 13.0, highest: 29.0, 
+examples.FactorialBenchmark:recursive().[number:int:10]
+reps: 10000, size: 81, mean: 14.785185185185187, variance: 12.952777777777778, std_deviation: 3.598996773793744, lowest: 13.0, highest: 30.0, 
+examples.FactorialBenchmark:iterative().[number:int:10]
+reps: 10000, size: 81, mean: 4.96543209876543, variance: 2.5567901234567882, std_deviation: 1.598996598950976, lowest: 4.0, highest: 9.0, 
+examples.FactorialBenchmark:mystery().[number:int:10]
+reps: 1, size: 81, mean: 150518.5185185185, variance: 4.855702777777778E9, std_deviation: 69682.8729156439, lowest: 64000.0, highest: 348000.0, 
+examples.FactorialBenchmark:tailRecursive().[number:int:20]
+reps: 10000000, size: 333, mean: 27.51651651651654, variance: 0.47939505770831264, std_deviation: 0.6923836058922197, lowest: 26.0, highest: 30.0, 
+examples.FactorialBenchmark:recursive().[number:int:20]
+reps: 10000, size: 81, mean: 31.950617283950628, variance: 182.0975308641975, std_deviation: 13.494351813414289, lowest: 29.0, highest: 151.0, 
+examples.FactorialBenchmark:iterative().[number:int:20]
+reps: 10000, size: 93, mean: 9.225806451612904, variance: 1.9810659186535766, std_deviation: 1.407503434686245, lowest: 8.0, highest: 19.0, 
+examples.FactorialBenchmark:mystery().[number:int:20]
+reps: 1, size: 81, mean: 287679.01234567905, variance: 2.158842067901235E10, std_deviation: 146929.98563605847, lowest: 107000.0, highest: 640000.0, 
 

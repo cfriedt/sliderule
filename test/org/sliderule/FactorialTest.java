@@ -13,28 +13,35 @@ import examples.*;
 public class FactorialTest {
 
 	@BeforeClass
-	public static void setup() {
+	public static void setup()
+	throws Exception
+	{
 		String[] arg = new String[] {
+			//"--debug", "1",
+			//"--max-trials", "3",
 			"-Cresults.console.class=org.sliderule.runner.InMemoryResultProcessor",
 			FactorialBenchmark.class.getName()
 		};
-		SlideRuleMain.main( arg );
+		SlideRuleMain.mainNoExit( arg );
 	}
 
 	@Test
-	public void compareTestResults() {
+	public void iterativeFasterThanRecursive() {
+
 		List<TrialSummary> summaries = InMemoryResultProcessor.getTrialSummaries();
+
 		TrialSummary first_recursive = null;
 		TrialSummary first_iterative = null;
+
 		for( TrialSummary ts: summaries ) {
 			if ( null == first_recursive ) {
-				if ( ( "" + ts ).contains( ":recursive" )  ) {
+				if ( ( "" + ts.proto ).contains( ":recursive" )  ) {
 					first_recursive = ts;
 					continue;
 				}
 			}
 			if ( null == first_iterative ) {
-				if ( ( "" + ts ).contains( ":iterative" )  ) {
+				if ( ( "" + ts.proto ).contains( ":iterative" )  ) {
 					first_iterative = ts;
 					continue;
 				}
@@ -44,7 +51,7 @@ public class FactorialTest {
 			}
 		}
 		if ( null == first_recursive || null == first_iterative ) {
-			throw new IllegalStateException();
+			throw new IllegalStateException( "one of the trials is null :(" );
 		}
 		assertEquals( "iterative mean time " + first_iterative.os.mean() + " is less than recursive mean time " + first_recursive.os.mean(), true, first_iterative.os.mean() < first_recursive.os.mean() );
 	}
