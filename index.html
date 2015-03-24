@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="Sliderule : Statistically accurate Java benchmarking - no strings attached">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Sliderule</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/cfriedt/sliderule">View on GitHub</a>
+
+          <h1 id="project_title">Sliderule</h1>
+          <h2 id="project_tagline">Statistically accurate Java benchmarking - no strings attached</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/cfriedt/sliderule/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/cfriedt/sliderule/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <p><img src="https://raw.githubusercontent.com/cfriedt/sliderule/master/misc/sliderule.jpg" alt="SlideRule"></p>
+
+<h3>
+<a id="welcome-to-sliderule" class="anchor" href="#welcome-to-sliderule" aria-hidden="true"><span class="octicon octicon-link"></span></a>Welcome to SlideRule</h3>
+
+<p>Inspired by <a href="https://code.google.com/p/caliper/">Google's Caliper</a>, SlideRule is a similar utility for benchmarking Java code. SlideRule maintains a vague level of API compatibility with Caliper. In fact, the Google Caliper annotations were used as-is inside of SlideRule, with some slight modification, but the usage has remained the same.</p>
+
+<p>Watch the Caliper introduction video <a href="https://www.youtube.com/watch?v=Rbx0HUCnF24">on YouTube</a>.</p>
+
+<p>The major differences between SlideRule and Caliper are:</p>
+
+<ul>
+<li>SlideRule is simple to use. Caliper is less simple.</li>
+<li>Caliper (beta) uses <a href="http://maven.apache.org/">Maven</a> as its build and packaging system (plugin system, execution system...) and therefore has several dependencies, while SlideRule has exactly zero dependencies. In fact, SlideRule does not impose any build system on its users at all.</li>
+<li>Caliper hooks instrumentation classes into the JVM which prevent it from being simply executable from a single jar file. This provides a finer grain of benchmarking. SlideRule has opted to sacrifice fine-grained measurement for simplicity.</li>
+<li>Caliper is able to measure the memory footprint on a per-class basis. SlideRule is primarily concerned with measuring execution times.</li>
+<li>In Caliper, the Measurement interface uses a double for value. In SlideRule, we use a PolymorphicType, which allows values to be of varying type.</li>
+</ul>
+
+<h3>
+<a id="algorithm" class="anchor" href="#algorithm" aria-hidden="true"><span class="octicon octicon-link"></span></a>Algorithm</h3>
+
+<p>SlideRule relies on a a fairly basic algorithm, and some tried-and-true statistical tests, to approximate the execution time of Java code. Java code, in particular, is tricky to benchmark because the Java Virtual Machine (JVM) can employ a Just-In-Time (JIT) compiler that modifies code structure dynamically and translates Java bytecode into native instruction sequences. This means that benchmarking results can change drastically from one invocation to the next. It is therefore important to ensure that the JVM is given sufficient opportunity to optimize and JIT-compile executing Java code before beginning to evaluate execution time.</p>
+
+<p>The algorithm can be loosely defined as follows:</p>
+
+<ol>
+<li>Query the JVM to determine how many iterations are required to activate the JIT for a particular method call. Call the method that many times in order to have the JVM compile and cache for future use.</li>
+<li>If a microbenchmark is being run, for an exponentially increasing number of repetitions, use the <a href="http://en.wikipedia.org/wiki/Newton%27s_method">Newton-Raphson</a> method of finding roots, or <a href="http://en.wikipedia.org/wiki/Newton%27s_method_in_optimization">Newton's method</a> for finding minima, to determine when there is little to no change in variance from one execution time to the next. If a macrobenchmark is being run, the number of repetitions is simply 1.</li>
+<li>Run the microbenchmark a number of times until <a href="http://en.wikipedia.org/wiki/Student%27s_t-test">Student's t-test</a> identifies the mean execution time within a 95% confidence interval. This stage assumes that the underlying distribution is <a href="http://en.wikipedia.org/wiki/Normal_distribution">normal</a> - an assumption that will be validated later.</li>
+<li>Determine the number of trials required, using the Chi-Square approximation (see <a href="http://www.stat.cmu.edu/%7Emark/degroot/3rdedition/">DeGroot</a>), for the experiment to be produce results accurate to within 1/5 of a standard deviation, with a 95% confidence level, under the assumption that the distribution is normal.</li>
+<li>Perform that many trials.</li>
+<li>Use the <a href="http://en.wikipedia.org/wiki/Chi-squared_test">Chi-Squared test</a> to validate that the distribution does, with 95% certainty, represent data randomly sampled from a normally distributed random variable with the same mean and standard deviation.</li>
+</ol>
+
+<h3>
+<a id="additional-features" class="anchor" href="#additional-features" aria-hidden="true"><span class="octicon octicon-link"></span></a>Additional Features</h3>
+
+<p>The SlideRule command line accepts multiple similar benchmark classes in a single invocation. These classes are executed, in turn, one after the other. This is useful when, say, several execution times of different algorithms must be compared based on the same set of parameters.</p>
+
+<p>SlideRule does not upload users' results to a cloud application. Any data that a user generates is never shared.</p>
+
+<h3>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span class="octicon octicon-link"></span></a>Usage</h3>
+
+<div class="highlight highlight-shell"><pre>Usage:
+ java org.sliderule.runner.SlideRuleMain [options...] <span class="pl-k">&lt;</span>benchmark_class_names<span class="pl-k">&gt;</span>
+
+Options:
+ -h, --help         print this message
+ -n, --dry-run      instead of measuring, execute a single rep <span class="pl-k">for</span> <span class="pl-smi">each</span> scenario
+                    <span class="pl-k">in</span>-process
+ -b, --benchmark    comma-separated list of benchmark methods to run<span class="pl-k">;</span> <span class="pl-s"><span class="pl-pds">'</span>foo<span class="pl-pds">'</span></span> is
+                    an <span class="pl-c1">alias</span> <span class="pl-k">for</span> <span class="pl-smi">'timeFoo</span><span class="pl-s"><span class="pl-pds">'</span> (default: all found in class)</span>
+<span class="pl-s"> -m, --vm           comma-separated list of VMs to test on; possible values are</span>
+<span class="pl-s">                    configured in SlideRule<span class="pl-pds">'</span></span>s configuration file (default:
+                    whichever VM sliderule itself is running <span class="pl-k">in</span>, only)
+ -i, --instrument   comma-separated list of measuring instruments to use<span class="pl-k">;</span> possible
+                    values are configured <span class="pl-k">in</span> SlideRule<span class="pl-s"><span class="pl-pds">'</span>s configuration file</span>
+<span class="pl-s">                    (default: "allocation,runtime")</span>
+<span class="pl-s"> -t, --max-trials   independent trials to perform per benchmark scenario.</span>
+<span class="pl-s">                    factor of minimum statistically significant number of trials</span>
+<span class="pl-s">                    for confidence of 95% within 1/5 of a standard deviation;</span>
+<span class="pl-s">                    a positive integer (default: 30)</span>
+<span class="pl-s"> -l, --time-limit   maximum length of time allowed for a single trial; use 0 to allow</span>
+<span class="pl-s">                    trials to run indefinitely. (default: 30s)</span>
+<span class="pl-s"> -r, --run-name     a user-friendly string used to identify the run</span>
+<span class="pl-s"> -p, --print-config print the effective configuration that will be used by SlideRule</span>
+<span class="pl-s"> -d, --delimiter    separator used in options that take multiple values (default: <span class="pl-pds">'</span></span>,<span class="pl-s"><span class="pl-pds">'</span>)</span>
+<span class="pl-s"> -c, --config       location of SlideRule<span class="pl-pds">'</span></span>s configuration file (default:
+                    <span class="pl-smi">$HOME</span>/.sliderule/config.properties)
+ --directory        location of SlideRule<span class="pl-s"><span class="pl-pds">'</span>s configuration and data directory</span>
+<span class="pl-s">                    (default: $HOME/.sliderule)</span>
+<span class="pl-s"> --debug            integer debug level (default is -1, messages printed to stderr)</span>
+<span class="pl-s"></span>
+<span class="pl-s"> -Dparam=val1,val2,...</span>
+<span class="pl-s">     Specifies the values to inject into the <span class="pl-pds">'</span></span>param<span class="pl-s"><span class="pl-pds">'</span> field of the benchmark</span>
+<span class="pl-s">     class; if multiple values or parameters are specified in this way, sliderule</span>
+<span class="pl-s">     will try all possible combinations.</span>
+<span class="pl-s"></span>
+<span class="pl-s"> -CconfigProperty=value</span>
+<span class="pl-s">     Specifies a value for any property that could otherwise be specified in</span>
+<span class="pl-s">     $HOME/.sliderule/config.properties. Properties specified on the command line</span>
+<span class="pl-s">     will override those specified in the file.</span>
+<span class="pl-s"></span>
+<span class="pl-s">See http://github.com/cfriedt/sliderule/sliderule/wiki/CommandLineOptions for more details.</span></pre></div>
+
+<h3>
+<a id="example" class="anchor" href="#example" aria-hidden="true"><span class="octicon octicon-link"></span></a>Example</h3>
+
+<p>Please see the <a href="https://github.com/cfriedt/sliderule/blob/master/example/examples/FactorialBenchmark.java">FactorialBenchmark</a> for an example on creating a simple benchmark class. As SlideRule is mostly API-compatible with Caliper, users are encouraged to view <a href="https://code.google.com/p/caliper/">Caliper</a> documentation as well and to report any undocumented inconsistencies as <a href="https://github.com/cfriedt/sliderule/issues">Issues</a>.</p>
+
+<p>Feel free to also benchmark Caliper's <a href="https://code.google.com/p/caliper/source/browse/#git%2Fexamples%2Fsrc%2Fmain%2Fjava%2Fexamples">examples</a>.</p>
+
+<h3>
+<a id="status" class="anchor" href="#status" aria-hidden="true"><span class="octicon octicon-link"></span></a>Status</h3>
+
+<p>Please check the <a href="https://github.com/cfriedt/sliderule/releases">Releases</a> frequently.</p>
+
+<h3>
+<a id="license" class="anchor" href="#license" aria-hidden="true"><span class="octicon octicon-link"></span></a>License</h3>
+
+<p>This software Copyright (C) Christopher Friedt, 2015, and is made freely available under the terms of the Apache 2.0 license, just as Google Caliper was. See the file <a href="https://github.com/cfriedt/sliderule/blob/master/LICENSE">LICENSE</a> for further details.</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Sliderule maintained by <a href="https://github.com/cfriedt">cfriedt</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
