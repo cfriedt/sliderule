@@ -19,7 +19,7 @@ package org.sliderule.stats;
 import java.util.*;
 
 /**
- * This class provides methods to {@link #generate} a {@link Histogram} based on a given number, or a guessed number of suitable {@link #partition partitions}.
+ * This class provides methods to generate a {@link Histogram} based on a given number, or a guessed number of suitable {@link #partition partitions}.
  *
  * @author <a href="mailto:chrisfriedt@gmail.com">Christopher Friedt</a>
  * @see
@@ -40,7 +40,6 @@ public final class Histogram {
 	 * Generate a {@link Histogram} representative of the provided data set.
 	 * @param n generate a {@link Histogram} with {@code n} bins.
 	 * @param data the set of data in question
-	 * @return the {@link Histogram}
 	 */
 	public Histogram( int n, double[] data ) {
 		this( n, new OfflineStatistics( data ) );
@@ -49,7 +48,6 @@ public final class Histogram {
 	 * Generate a {@link Histogram} representative of the provided data set.
 	 * The generated {@link Histogram} will have optimum {@link #binWidth() bin width}.
 	 * @param data the set of data in question
-	 * @return the {@link Histogram}
 	 */
 	public Histogram( double[] data ) {
 		this( new OfflineStatistics( data ) );
@@ -58,7 +56,6 @@ public final class Histogram {
 	 * Generate a {@link Histogram} representative of the provided data set.
 	 * The generated {@link Histogram} will have optimum {@link #binWidth() bin width}.
 	 * @param is the {@link IStatistics} representing the data set in question
-	 * @return the {@link Histogram}
 	 */
 	public Histogram( IStatistics is ) {
 		this( partition( is ), is );
@@ -67,7 +64,6 @@ public final class Histogram {
 	 * Generate a {@link Histogram} representative of the provided data set.
 	 * @param n generate a {@link Histogram} with {@code n} bins.
 	 * @param is the {@link IStatistics} representing the data set in question
-	 * @return the {@link Histogram}
 	 */
 	public Histogram( int n, IStatistics is ) {
 		int dl = is.size();
@@ -176,8 +172,7 @@ public final class Histogram {
 	}
 	/**
 	 * Returns the center of the all bins.
-	 * @param i the bin number
-	 * @return the bin center
+	 * @return the bin centers
 	 */
 	public double[] binCenters() {
 		return Arrays.copyOf( bin_centers, bin_centers.length );

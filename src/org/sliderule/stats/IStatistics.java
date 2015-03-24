@@ -30,28 +30,28 @@ package org.sliderule.stats;
  */
 public interface IStatistics {
 	/**
-	 * Return the backing data set that this {@link IStatistic} represents. The data
+	 * Return the backing data set that this {@link IStatistics} represents. The data
 	 * is returned with the original sample order preserved.
 	 * @return the data
 	 */
 	double[] data();
 	/**
-	 * The highest valued datum contained within the data set that this {@link IStatistic} represents.
+	 * The highest valued datum contained within the data set that this {@link IStatistics} represents.
 	 * @return the highest value
 	 */
 	double highest();
 	/**
-	 * The least valued datum contained within the data set that this {@link IStatistic} represents.
+	 * The least valued datum contained within the data set that this {@link IStatistics} represents.
 	 * @return the lowest value
 	 */
 	double lowest();
 	/**
-	 * Calculate the arithmetic mean of the data set that this {@link IStatistic} represents.
+	 * Calculate the arithmetic mean of the data set that this {@link IStatistics} represents.
 	 * @return the mean
 	 */
 	double mean();
 	/**
-	 * Return the backing data set that this {@link IStatistic} represents. The data
+	 * Return the backing data set that this {@link IStatistics} represents. The data
 	 * is returned sorted from lowest to highest in natural numeric order.
 	 * @return the ordered data
 	 */
@@ -63,12 +63,12 @@ public interface IStatistics {
 	int size();
 	/**
 	 * Calculate the standard deviation (or sample deviation) of the data set that this
-	 * {@link IStatistic} represents.
+	 * {@link IStatistics} represents.
 	 * @return the variance
 	 */
 	double standardDeviation();
 	/**
-	 * Calculate the variance of the data set that this {@link IStatistic} represents.
+	 * Calculate the variance of the data set that this {@link IStatistics} represents.
 	 * @return the variance
 	 */
 	double variance();

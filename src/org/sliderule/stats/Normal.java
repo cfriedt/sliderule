@@ -70,7 +70,7 @@ public final class Normal {
 	 * {@link Normal} distribution.
 	 * @param n sample size such that there are {@code n-1} degrees of freedom.{@code 2 <= n}
 	 * @param p level of confidence. {@code 0 <= p <= 1}
-	 * @return {@code x} &ni; {@code Pr( X <= x | n-1 ) = {@code p}
+	 * @return {@code x} &ni; {@code Pr( X <= x | n-1 ) = p}
 	 */
 	public static double inv( int n, double p ) {
 		if ( p < 0 || p > 1 ) {

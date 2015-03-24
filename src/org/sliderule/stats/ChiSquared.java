@@ -187,7 +187,7 @@ public final class ChiSquared {
 	 * {@link ChiSquared} distribution.
 	 * @param n sample size such that there are {@code n-1} degrees of freedom.{@code 2 <= n}
 	 * @param p level of confidence. {@code 0 <= p <= 1}
-	 * @return {@code x} &ni; {@code Pr( X <= x | n-1 ) = {@code p}
+	 * @return {@code x} &ni; {@code Pr( X <= x | n-1 ) = p}
 	 */
 	public static double inv( int n, double p ) {
 		if ( p < 0 || p > 1 ) {
@@ -244,17 +244,17 @@ public final class ChiSquared {
 	 * {@code proto}.
 	 * The <a href="http://en.wikipedia.org/wiki/Null_hypothesis">null hypothesis</a>
 	 * is that the distribution is not a good fit.
-	 * @param proto a reference distribution of the random variable {@code X}
-	 * @param h data sampled from the random variable {@code X}
-	 * @param p the confidence level the test must satisfy
-	 * @param offset ignore the first n bins of the hypothesis
-	 * @return true if the null hypothesis is invalid - i.e. if {@code proto} is a good fit for {@code h}
+	 * @param prototype a reference distribution of the random variable {@code X}
+	 * @param hypothesis data sampled from the random variable {@code X}
+	 * @param p the confidence level the test must satisfy. 0 < p < 1
+	 * @param offset ignore the first {@code offset} bins of the hypothesis
+	 * @return true if the null hypothesis is invalid - i.e. if {@code prototype} is a good fit for {@code h}
 	 */
-	public static boolean test( double p, boolean normalize, Histogram proto, Histogram hypothesis, int offset ) {
-		if ( null == proto || null == hypothesis || proto.size() != hypothesis.size() ) {
+	public static boolean test( double p, boolean normalize, Histogram prototype, Histogram hypothesis, int offset ) {
+		if ( null == prototype || null == hypothesis || prototype.size() != hypothesis.size() ) {
 			throw new IllegalArgumentException();
 		}
-		if ( 0 == proto.size() ) {
+		if ( 0 == prototype.size() ) {
 			return false;
 		}
 		int skipped = 0;
@@ -262,11 +262,11 @@ public final class ChiSquared {
 		double[] proto_data;
 		double[] hypothesis_data;
 		if ( normalize ) {
-			proto_data = proto.normalizedData();
+			proto_data = prototype.normalizedData();
 			hypothesis_data = hypothesis.normalizedData();
 		} else {
-			proto_data = proto.data();
-			hypothesis_data = proto.data();
+			proto_data = prototype.data();
+			hypothesis_data = prototype.data();
 		}
 		for( int i=0; i < proto_data.length - offset; i++ ) {
 			double num = Math.pow( Math.abs( hypothesis_data[ i + offset ] - proto_data[ i ] ), 2 );
@@ -296,12 +296,12 @@ public final class ChiSquared {
 	 * {@code proto}.
 	 * The <a href="http://en.wikipedia.org/wiki/Null_hypothesis">null hypothesis</a>
 	 * is that the distribution is not a good fit.
-	 * @param proto a reference distribution of the random variable {@code X}
-	 * @param h data sampled from the random variable {@code X}
-	 * @param p the confidence level the test must satisfy
-	 * @return true if the null hypothesis is invalid - i.e. if {@code proto} is a good fit for {@code h}
+	 * @param prototype a reference distribution of the random variable {@code X}
+	 * @param hypothesis data sampled from the random variable {@code X}
+	 * @param p the confidence level the test must satisfy. 0 < p < 1
+	 * @return true if the null hypothesis is invalid - i.e. if {@code prototype} is a good fit for {@code h}
 	 */
-	public static boolean test( double p, boolean normalize, Histogram proto, Histogram hypothesis ) {
-		return test( p, normalize, proto, hypothesis, 0 );
+	public static boolean test( double p, boolean normalize, Histogram prototype, Histogram hypothesis ) {
+		return test( p, normalize, prototype, hypothesis, 0 );
 	}
 }

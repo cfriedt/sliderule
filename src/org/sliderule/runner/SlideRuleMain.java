@@ -22,8 +22,6 @@ import java.util.*;
 
 import org.sliderule.api.*;
 
-import com.apple.laf.ClientPropertyApplicator.*;
-
 public final class SlideRuleMain {
 	private SlideRuleMain() {}
 	private Arguments arguments = new Arguments();
