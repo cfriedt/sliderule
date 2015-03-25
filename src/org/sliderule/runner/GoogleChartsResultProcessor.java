@@ -219,10 +219,10 @@ public class GoogleChartsResultProcessor extends InMemoryResultProcessor {
 	}
 
 	private static final String sep = "-";
-	private String genFileName( Date date, Crunched c, String param_str ) {
+	private String genFileName( Crunched c, String param_str ) {
 		SimpleDateFormat fmt = new SimpleDateFormat( "yyyyMMdd" );
 		String date_str = fmt.format( date );
-		String epoch_str = "" + System.currentTimeMillis();
+		String epoch_str = "" + epoch;
 		param_str = param_str.substring( 1, param_str.length() -1 );
 		String r = output_directory + File.separator + "sliderule" + sep + date_str + sep + epoch_str + sep + param_str + ".html";
 		return r;
@@ -412,8 +412,6 @@ public class GoogleChartsResultProcessor extends InMemoryResultProcessor {
 	@Override
 	public void close() throws IOException {
 
-		Date date = new Date();
-
 		// this is really the only indication that we have processed all of the trials, so...
 
 		// first, calculate all of the statistics for each experiment
@@ -440,7 +438,7 @@ public class GoogleChartsResultProcessor extends InMemoryResultProcessor {
 			TreeMap<UUID,Crunched> these_micro = filterByParameters( micro, pmt_str );
 			TreeMap<UUID,Crunched> these_macro = filterByParameters( macro, pmt_str );
 
-			String fn = genFileName( date, c, pmt_str );
+			String fn = genFileName( c, pmt_str );
 			File f = new File( fn );
 			f.mkdirs();
 			if ( f.exists() ) {
@@ -451,6 +449,9 @@ public class GoogleChartsResultProcessor extends InMemoryResultProcessor {
 			pw.close();
 		}
 	}
+
+	Date date = new Date();
+	long epoch = System.currentTimeMillis();
 
 	static {
 		String s;
