@@ -250,17 +250,27 @@ public class GoogleChartsResultProcessor extends InMemoryResultProcessor {
 		pw.print( head );
 	}
 	private static final String tail[] = {
-		"}"           + "\n" +
+		"    }"       + "\n" +
 		"  </script>" + "\n" +
 		"</head>"     + "\n" +
 		"<body>"      + "\n",
 		"</body>"     + "\n" +
 		"</html>"     + "\n",
 	};
-	private void composeTail( PrintWriter pw, int n ) {
+	private void composeTail( PrintWriter pw, String title, String[] param, int n ) {
 		pw.print( tail[ 0 ] );
+
+		pw.println( "  <p><big><b>" + title + "</b></big></p>" );
+		pw.println( "  <p><b>Parameter List:</b><br/>" );
+		pw.println( "  <ul>" );
+		for( int i=0; i<param.length; i++ ) {
+			pw.println( "    <li>" + param[ i ] + "</li>" );
+		}
+		pw.println( "  </ul>" );
+		pw.println( "  </p>" );
+
 		for( int i = 0; i < n; i++ ) {
-			pw.println( "  <div id=\"chart" + i + "\" style=\"width: 900px; height: 500px;\"></div>" );
+			pw.println( "  <div id=\"chart" + i + "\"></div>" );
 		}
 		pw.print( tail[ 1 ] );
 	}
@@ -279,13 +289,19 @@ public class GoogleChartsResultProcessor extends InMemoryResultProcessor {
 
 		if ( crunch.size() >= 1 ) {
 
+			// order by method name
+			TreeMap<String,Crunched> sorted = new TreeMap<String,Crunched>();
+			for( Crunched c: crunch.values() ) {
+				sorted.put( c.getMethodName(), c );
+			}
+
 			// print chart data
 			pw.println( "      " + chart_data_str[ 0 ]  + chart_idx + chart_data_str[ 1 ] );
 			pw.println( "        " + "[ 'Test', 'Time (ns)' ]," );
 			int i=0;
-			for( Crunched c: crunch.values() ) {
+			for( Crunched c: sorted.values() ) {
 				pw.print( "        " + "[ '" + c.getMethodName() + "', " + c.getStatistics().mean() + " ]" );
-				if ( i < crunch.size() - 1 ) {
+				if ( i < sorted.size() - 1 ) {
 					pw.print(",");
 				}
 				pw.println();
@@ -308,13 +324,19 @@ public class GoogleChartsResultProcessor extends InMemoryResultProcessor {
 
 		if ( crunch.size() >= 1 ) {
 
+			// order by class name
+			TreeMap<String,Crunched> sorted = new TreeMap<String,Crunched>();
+			for( Crunched c: crunch.values() ) {
+				sorted.put( c.getClassName(), c );
+			}
+
 			// print chart data
 			pw.println( "      " + chart_data_str[ 0 ]  + chart_idx + chart_data_str[ 1 ] );
 			pw.println( "        " + "[ 'Class', 'Time (ns)' ]," );
 			int i=0;
-			for( Crunched c: crunch.values() ) {
+			for( Crunched c: sorted.values() ) {
 				pw.print( "        " + "[ '" + c.getClassName() + "', " + c.getStatistics().mean() + " ]" );
-				if ( i < crunch.size() - 1 ) {
+				if ( i < sorted.size() - 1 ) {
 					pw.print(",");
 				}
 				pw.println();
@@ -346,9 +368,10 @@ public class GoogleChartsResultProcessor extends InMemoryResultProcessor {
 
 	private void composeFile( String file_name, PrintWriter pw, TreeMap<UUID,Crunched> micro, TreeMap<UUID,Crunched> macro ) {
 
-//		String[] file_name_unpacked = unpackFileName( file_name );
-//		String date = file_name_unpacked[ 1 ];
-//		String[] param = file_name_unpacked[ 3 ].split( "," );
+		String[] file_name_unpacked = unpackFileName( file_name );
+		String date = file_name_unpacked[ 1 ];
+		String[] param = file_name_unpacked[ 3 ].split( "," );
+		Arrays.sort( param );
 
 		Class<?>[] classes = extractClasses( micro, macro );
 
@@ -360,10 +383,12 @@ public class GoogleChartsResultProcessor extends InMemoryResultProcessor {
 		if ( multi_class ) {
 			String[] unique_method_names;
 			unique_method_names = extractUniqueMethodNames( micro );
+			Arrays.sort( unique_method_names );
 			for( String method_name: unique_method_names ) {
 				doMultiChart( pw, true, chart_idx++, filterByMethodName( micro, method_name ), method_name );
 			}
 			unique_method_names = extractUniqueMethodNames( macro );
+			Arrays.sort( unique_method_names );
 			for( String method_name: unique_method_names ) {
 				doMultiChart( pw, false, chart_idx++, filterByMethodName( macro, method_name ), method_name );
 			}
@@ -376,7 +401,9 @@ public class GoogleChartsResultProcessor extends InMemoryResultProcessor {
 			System.err.println( "histogram plotting is not yet implemented" );
 		}
 
-		composeTail( pw, chart_idx );
+		String title = ( multi_class ? "Multi-Class" : classes[0].getName() ) + " Benchmark Results " + date + "<br/>(smaller is better)";
+
+		composeTail( pw, title, param, chart_idx );
 	}
 
 	/**
