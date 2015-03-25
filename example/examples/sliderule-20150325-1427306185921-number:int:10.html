@@ -7,9 +7,9 @@
       function drawVisualization() {
       var data0 = google.visualization.arrayToDataTable([
         [ 'Test', 'Time (ns)' ],
-        [ 'iterative', 10.024691358024688 ],
-        [ 'recursive', 31.447580645161285 ],
-        [ 'tailRecursive', 26.298989898989902 ],
+        [ 'iterative', 5.777777777777778 ],
+        [ 'recursive', 13.567901234567902 ],
+        [ 'tailRecursive', 13.876543209876543 ],
       ]);
       var options0 = {
         title: "Micro-Benchmark Execution Time (ns)"
@@ -19,7 +19,7 @@
       chart0.draw(view0, options0);
       var data1 = google.visualization.arrayToDataTable([
         [ 'Test', 'Time (ns)' ],
-        [ 'mystery', 244469.1358024691 ]
+        [ 'mystery', 120740.74074074074 ]
       ]);
       var options1 = {
         title: "Macro-Benchmark Execution Time (ns)"
@@ -34,7 +34,7 @@
   <p><big><b>examples.FactorialBenchmark Benchmark Results 20150325<br/>(smaller is better)</b></big></p>
   <p><b>Parameter List:</b><br/>
   <ul>
-    <li>number:int:20</li>
+    <li>number:int:10</li>
   </ul>
   </p>
   <div id="chart0"></div>
