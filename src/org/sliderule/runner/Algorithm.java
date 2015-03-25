@@ -102,7 +102,7 @@ class Algorithm {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void permute()
+	public static PolymorphicType[][] permute( Field[] param_fields )
 	throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
 	{
 		int np = param_fields.length;
@@ -130,7 +130,7 @@ class Algorithm {
 
 		int nrows = euprod( cardinality );
 		int ncols = cardinality.length;
-		param_values = new PolymorphicType[ nrows ][ ncols ];
+		PolymorphicType[][] param_values = new PolymorphicType[ nrows ][ ncols ];
 
 		for( int col=0; col < ncols; col++ ) {
 			int val = 0;
@@ -143,6 +143,13 @@ class Algorithm {
 				}
 			}
 		}
+		return param_values;
+	}
+
+	private void permute()
+	throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
+	{
+		param_values = permute( param_fields );
 	}
 
 	private void setup()
@@ -578,7 +585,7 @@ class Algorithm {
 	}
 	static String nameTrial( Class<?> bench_class, Method method, Field[] param, PolymorphicType[] param_value ) {
 		String r = "";
-		r += bench_class.getName() + ":" + method.getName() + "().";
+		r += bench_class.getName() + "." + method.getName() + "()";
 		r += nameParams( param, param_value );
 		return r;
 	}

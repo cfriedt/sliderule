@@ -40,6 +40,14 @@ final class Arguments {
 
 	List<Class<?>> bench_classes = new ArrayList<Class<?>>();
 
+	static Properties static_config_properties = null;
+
+	Arguments() {
+		if ( null == static_config_properties ) {
+			static_config_properties = config_properties;
+		}
+	}
+
 	static {
 		HOME = "" + System.getenv().get( "HOME" );
 	}

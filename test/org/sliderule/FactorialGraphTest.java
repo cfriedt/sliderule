@@ -27,7 +27,7 @@ import org.sliderule.stats.*;
 
 import examples.*;
 
-public class FactorialTest {
+public class FactorialGraphTest {
 
 	@BeforeClass
 	public static void setup()
@@ -36,7 +36,7 @@ public class FactorialTest {
 		String[] arg = new String[] {
 			//"--debug", "1",
 			//"--max-trials", "3",
-			"-Cresults.console.class=org.sliderule.runner.InMemoryResultProcessor",
+			"-Cresults.console.class=org.sliderule.runner.GoogleChartsResultProcessor",
 			FactorialBenchmark.class.getName()
 		};
 		SlideRuleMain.main( arg );
@@ -95,9 +95,9 @@ public class FactorialTest {
 	}
 
 	@Test
-	public void iterativeFasterThanRecursive() {
+	public void testGraphing() {
 
-		TreeMap<UUID,ArrayList<Trial>> trials = InMemoryResultProcessor.trialSet();
+		TreeMap<UUID,ArrayList<Trial>> trials = GoogleChartsResultProcessor.trialSet();
 
 		TreeMap<UUID,ArrayList<Trial>> recursive = filterByMethodName( trials, "recursive" );
 		TreeMap<UUID,ArrayList<Trial>> iterative = filterByMethodName( trials, "iterative" );

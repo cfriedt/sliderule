@@ -355,6 +355,5 @@ public final class SlideRuleMain {
 		if ( 0 != return_val || ( null != srm && srm.arguments.help ) ) {
 			usage();
 		}
-		System.exit( return_val );
 	}
 }
