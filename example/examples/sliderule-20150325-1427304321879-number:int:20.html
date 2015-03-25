@@ -1,0 +1,43 @@
+<html>
+  <head>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+      google.load("visualization", "1", {packages:["corechart"]});
+      google.setOnLoadCallback(drawVisualization);
+      function drawVisualization() {
+      var data0 = google.visualization.arrayToDataTable([
+        [ 'Test', 'Time (ns)' ],
+        [ 'iterative', 10.024691358024688 ],
+        [ 'recursive', 31.447580645161285 ],
+        [ 'tailRecursive', 26.298989898989902 ],
+      ]);
+      var options0 = {
+        title: "Micro-Benchmark Execution Time (ns)"
+      };
+      var chart0 = new google.visualization.BarChart(document.getElementById("chart0"));
+      var view0 = new google.visualization.DataView(data0);
+      chart0.draw(view0, options0);
+      var data1 = google.visualization.arrayToDataTable([
+        [ 'Test', 'Time (ns)' ],
+        [ 'mystery', 244469.1358024691 ]
+      ]);
+      var options1 = {
+        title: "Macro-Benchmark Execution Time (ns)"
+      };
+      var chart1 = new google.visualization.BarChart(document.getElementById("chart1"));
+      var view1 = new google.visualization.DataView(data1);
+      chart1.draw(view1, options1);
+    }
+  </script>
+</head>
+<body>
+  <p><big><b>examples.FactorialBenchmark Benchmark Results 20150325<br/>(smaller is better)</b></big></p>
+  <p><b>Parameter List:</b><br/>
+  <ul>
+    <li>number:int:20</li>
+  </ul>
+  </p>
+  <div id="chart0"></div>
+  <div id="chart1"></div>
+</body>
+</html>
