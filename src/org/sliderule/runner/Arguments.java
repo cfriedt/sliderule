@@ -42,7 +42,7 @@ final class Arguments {
 
 	static Properties static_config_properties = null;
 
-	private Arguments() {
+	Arguments() {
 		if ( null == static_config_properties ) {
 			static_config_properties = config_properties;
 		}
