@@ -16,56 +16,49 @@
 
 package org.sliderule.runner;
 
+import java.io.*;
 import java.util.*;
 
+import org.sliderule.api.*;
 import org.sliderule.model.*;
-import org.sliderule.stats.*;
 
-public class InMemoryResultProcessor extends ConsoleResultProcessor {
+/**
+ * <p><b>In-Memory Result Processor</b></p>
+ *
+ * <p>This class simply stores benchmarking results in a {@link TreeMap}
+ * sorted by {@link UUID}.</p>
+ *
+ * @author <a href="mailto:chrisfriedt@gmail.com">Christopher Friedt</a>
+ */
+public class InMemoryResultProcessor implements ResultProcessor {
 
-	public static class TrialSummary {
-		public UUID id;
-		public Trial proto;
-		public OnlineStatistics os;
-		public TrialSummary() {
-			os = new OnlineStatistics();
-		}
+	protected static final TreeMap<UUID,ArrayList<Trial>> trial_set = new TreeMap<UUID,ArrayList<Trial>>();
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void close() throws IOException {
 	}
 
-	private static final ArrayList<TrialSummary> alts;
-	private static TrialSummary trial_summary;
-	static {
-		 alts = new ArrayList<TrialSummary>();
-		 trial_summary = new TrialSummary();
-		 alts.add( trial_summary );
-	}
-
-	public static List<TrialSummary> getTrialSummaries() {
-		return alts;
-	}
-
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void processTrial( Trial trial ) {
 
-		super.processTrial( trial );
+		ArrayList<Trial> alt;
 
-		if ( trial.id() != trial_summary.id ) {
-			if ( trial_summary.id != null ) {
-				trial_summary = new TrialSummary();
-				alts.add( trial_summary );
-			}
-			trial_summary.id = trial.id();
-			trial_summary.proto = trial;
+		if ( ! trial_set.containsKey( trial.id() ) ) {
+			alt = new ArrayList<Trial>();
+			trial_set.put( trial.id(), alt );
 		}
 
-		for( Measurement m: trial.measurements() ) {
-			switch( m.description() ) {
-			case "elapsed_time_ns":
-				trial_summary.os.update( (double)(Double) m.value().value );
-				break;
-			default:
-				break;
-			}
-		}
+		alt = trial_set.get( trial.id() );
+		alt.add( trial );
+	}
+
+	public static TreeMap<UUID,ArrayList<Trial>> trialSet() {
+		return trial_set;
 	}
 }
