@@ -226,7 +226,7 @@ public final class ChiSquared {
 		double pp = 0;
 		double one_plus_q_squared = Math.pow( (1 + q), 2 );
 		double one_minus_q_squared = Math.pow( (1 - q), 2 );
-		for( n = 2, p1 = 0, p2 = 0; p1 * p2 < p; n++ ) {
+		for( n = 2, p1 = 0, p2 = 0; pp < p; n++ ) {
 			double dn = (double)n;
 			double sqrt_n = Math.sqrt( dn );
 			p1 = Normal.cdf( 0, q * sqrt_n );

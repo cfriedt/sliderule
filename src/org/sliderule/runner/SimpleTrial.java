@@ -23,22 +23,32 @@ import org.sliderule.model.*;
 
 final class SimpleTrial implements Trial {
 
-	private final Class<?> bench_class;
+	private final SlideRuleAnnotations ann;
 	private final Method method;
+	private final boolean micro;
 	private final Field[] param;
 	private final PolymorphicType[] param_value;
 
 	private final UUID id;
 	private final ArrayList<Measurement> measurements;
 
-	public SimpleTrial( UUID id, Class<?> bench_class, Method method, Field[] param, PolymorphicType[] param_value )
+	public SimpleTrial( UUID id, SlideRuleAnnotations ann, Method method, Field[] param, PolymorphicType[] param_value )
 	{
-		this.bench_class = bench_class;
+		this.ann = ann;
 		this.method = method;
 		this.param = param;
 		this.param_value = param_value;
 		this.id = id;
-		measurements = new ArrayList<Measurement>(  );
+		measurements = new ArrayList<Measurement>();
+		
+		// keep this loop at the end of the constructor!
+		for( Method m: ann.getBenchmarkMethods() ) {
+			if ( method == m ) {
+				micro = true;
+				return;
+			} 
+		}
+		micro = false;
 	}
 
 	@Override
@@ -54,9 +64,36 @@ final class SimpleTrial implements Trial {
 	void addMeasurement( Measurement measurement ) {
 		measurements.add( measurement );
 	}
+	
+	SlideRuleAnnotations getSlideRuleAnnotations() {
+		return ann;
+	}
+
+	Method getMethod() {
+		return method;
+	}
+
+	boolean isMicro() {
+		return micro;
+	}
+	
+	Field[] getParam() {
+		return param;
+	}
+
+	PolymorphicType[] getParamValue() {
+		return param_value;
+	}
 
 	@Override
 	public String toString() {
-		return Algorithm.nameTrial( bench_class, method, param, param_value );
+		return SimpleTrial.nameTrial( ann.getAnnotatedClass(), method, param, param_value );
+	}
+
+	public static String nameTrial( Class<?> bench_class, Method method, Field[] param, PolymorphicType[] param_value ) {
+		String r = "";
+		r += bench_class.getName() + "." + method.getName() + "()";
+		r += PolymorphicType.nameParams( param, param_value );
+		return r;
 	}
 }

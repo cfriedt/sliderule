@@ -269,14 +269,15 @@ public final class SlideRuleMain {
 		return true;
 	}
 
+	@SuppressWarnings("unchecked")
 	private void setup()
 	throws NonUniformBenchmarkClassesException, ClassNotFoundException, InstantiationException, IllegalAccessException
 	{
-		AnnotatedClass prev_ac = null;
+		SlideRuleAnnotations prev_ac = null;
 
 		for( Class<?> klass: arguments.bench_classes ) {
 
-			AnnotatedClass ac = new AnnotatedClass( klass );
+			SlideRuleAnnotations ac = new SlideRuleAnnotations( klass );
 
 			if ( arguments.config_properties.containsKey( "results.console.class" ) ) {
 				ClassLoader cl = ClassLoader.getSystemClassLoader();

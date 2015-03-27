@@ -22,19 +22,19 @@ import org.sliderule.api.*;
 
 class Context {
 
-	final HashSet<AnnotatedClass> bench_classes;
+	final HashSet<SlideRuleAnnotations> bench_classes;
 	ResultProcessor results_processor;
 
 	public Context() {
-		bench_classes = new HashSet<AnnotatedClass>();
+		bench_classes = new HashSet<SlideRuleAnnotations>();
 		results_processor = new ConsoleResultProcessor();
 	}
 
-	public void addAnnotatedClass( AnnotatedClass ac ) {
+	public void addAnnotatedClass( SlideRuleAnnotations ac ) {
 		bench_classes.add( ac );
 	}
 
-	public Set<AnnotatedClass> getAnnotatedClasses() {
+	public Set<SlideRuleAnnotations> getAnnotatedClasses() {
 		return bench_classes;
 	}
 

@@ -44,14 +44,6 @@ public class OfflineStatistics extends AStatistics {
 	boolean variance_calculated = false;
 	double variance = 0;
 
-	public OfflineStatistics( byte[] data ) {
-		this.data = new double[ data.length ];
-		for( int i=0; i < data.length; i++ ) {
-			this.data[ i ] = (double) data[ i ];
-		}
-		ordered_data = Arrays.copyOf( this.data, this.data.length );
-		Arrays.sort( ordered_data );
-	}
 	public OfflineStatistics( short[] data ) {
 		this.data = new double[ data.length ];
 		for( int i=0; i < data.length; i++ ) {

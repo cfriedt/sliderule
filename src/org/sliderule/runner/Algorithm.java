@@ -25,7 +25,7 @@ import org.sliderule.api.*;
 import org.sliderule.model.*;
 import org.sliderule.stats.*;
 
-class Algorithm {
+public class Algorithm {
 
 	// We make the assumption (yes, I know) that our sampled random variable (execution time)
 	// will have a (non-standard) normal distribution. This is later validated using the
@@ -64,9 +64,9 @@ class Algorithm {
 	}
 
 	private static class ClassAndInstance {
-		public final AnnotatedClass klass;
+		public final SlideRuleAnnotations klass;
 		public final Object instance;
-		public ClassAndInstance( AnnotatedClass klass, Object instance ) {
+		public ClassAndInstance( SlideRuleAnnotations klass, Object instance ) {
 			this.klass = klass;
 			this.instance = instance;
 		}
@@ -155,14 +155,14 @@ class Algorithm {
 	private void setup()
 	throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
 	{
-		for( AnnotatedClass ac: context.getAnnotatedClasses() ) {
+		for( SlideRuleAnnotations ac: context.getAnnotatedClasses() ) {
 			Class<?> an = ac.getAnnotatedClass();
 			Object o = an.newInstance();
 			ClassAndInstance cai = new ClassAndInstance( ac, o );
 			alcai.add( cai );
 		}
 
-		AnnotatedClass proto;
+		SlideRuleAnnotations proto;
 		proto = alcai.get( 0 ).klass;
 		ArrayList<Field> alf = new ArrayList<Field>();
 		alf.addAll( proto.getParamFields() );
@@ -391,13 +391,13 @@ class Algorithm {
 		boolean r = ChiSquared.test( P_CONFIDENCE, normalize, normal_hist, observed_hist, observed_hist.meanBin() );
 
 		if ( r ) {
-			D( "statistical model validated" );
+			D( "statistical model validated: " + observed_stats );
 		}
 		return r;
 	}
 
 
-	private void mark( boolean macro, AnnotatedClass k, Object o, Method m, int param_set )
+	private void mark( boolean macro, SlideRuleAnnotations ann, Object o, Method m, int param_set )
 	throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
 	{
 		Object dummy = null;
@@ -427,12 +427,12 @@ class Algorithm {
 		for( ; ! validated_statistical_model && trials.size() < MAX_TRIALS; ) {
 
 			if ( macro ) {
-				for( Method b4: k.getBeforeRepMethods() ) {
+				for( Method b4: ann.getBeforeRepMethods() ) {
 					b4.invoke( o );
 				}
 			}
 
-			SimpleTrial st = new SimpleTrial( id, k.getAnnotatedClass(), m, param_fields, param_values[ param_set ] );
+			SimpleTrial st = new SimpleTrial( id, ann, m, param_fields, param_values[ param_set ] );
 			ts.clear();
 
 			trial_start_ms = System.currentTimeMillis();
@@ -494,7 +494,7 @@ class Algorithm {
 			validated_statistical_model = validateStatisticalModel( trials );
 
 			if ( macro ) {
-				for( Method aft: k.getAfterRepMethods() ) {
+				for( Method aft: ann.getAfterRepMethods() ) {
 					aft.invoke( o );
 				}
 			}
@@ -511,7 +511,7 @@ class Algorithm {
 
 		if ( trials.size() >= MAX_TRIALS ) {
 			D( "failed to validate statistical model for " + trials.get( 0 ) + " after " + trials.size() + " trials");
-			SimpleTrial warning_trial = new SimpleTrial( id, k.getAnnotatedClass(), m, param_fields, param_values[ param_set ] );
+			SimpleTrial warning_trial = new SimpleTrial( id, ann, m, param_fields, param_values[ param_set ] );
 			SimpleMeasurement warning_measurement = new SimpleMeasurement( "warning", new PolymorphicType( String.class, new String( "failed to validate statistical model" ) ) );
 			warning_trial.addMeasurement( warning_measurement );
 			context.results_processor.processTrial( warning_trial );
@@ -524,7 +524,7 @@ class Algorithm {
 
 		for( ClassAndInstance cai: alcai ) {
 
-			AnnotatedClass k = cai.klass;
+			SlideRuleAnnotations k = cai.klass;
 			Object o = cai.instance;
 
 			for( int row=0; row < param_values.length; row++ ) {
@@ -535,7 +535,7 @@ class Algorithm {
 					f.set( o, param_values[ row ][ col ].value );
 				}
 
-				D( "benchmarking " + cai.klass.getAnnotatedClass().getName() + " with parameters " + nameParams( param_fields, param_values[row] ) );
+				D( "benchmarking " + cai.klass.getAnnotatedClass().getName() + " with parameters " + PolymorphicType.nameParams( param_fields, param_values[row] ) );
 
 				try {
 
@@ -582,26 +582,5 @@ class Algorithm {
 			algo.setup();
 			algo.bench();
 		}
-	}
-	static String nameTrial( Class<?> bench_class, Method method, Field[] param, PolymorphicType[] param_value ) {
-		String r = "";
-		r += bench_class.getName() + "." + method.getName() + "()";
-		r += nameParams( param, param_value );
-		return r;
-	}
-	static String nameParams( Field[] param, PolymorphicType[] param_value ) {
-		String r = "[";
-		if ( !( null == param || 0 == param.length ) ) {
-			for( int i=0; i<param.length; i++ ) {
-				r += param[ i ].getName();
-				r += ":";
-				r += param_value[ i ];
-				if ( i < param.length - 1 ) {
-					r += ",";
-				}
-			}
-		}
-		r += "]";
-		return r;
 	}
 }

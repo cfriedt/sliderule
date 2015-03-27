@@ -83,14 +83,15 @@ public class FactorialTest {
 	}
 
 	private IStatistics getStats( ArrayList<Trial> trials ) {
-		OnlineStatistics os = new OnlineStatistics();
+		ArrayList<Double> etns = new ArrayList<Double>(); 
 		for( Trial t: trials ) {
 			for( Measurement m: t.measurements() ) {
 				if ( "elapsed_time_ns".equals( m.description() ) ) {
-					os.update( (double)(Double) m.value().value );
+					etns.add( (double) m.value().value );
 				}
 			}
 		}
+		OfflineStatistics os = new OfflineStatistics( (double[]) ArrayUtils.toPrimitive( (Double[]) etns.toArray() ) );
 		return os;
 	}
 
