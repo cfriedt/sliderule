@@ -40,13 +40,13 @@ final class SimpleTrial implements Trial {
 		this.param_value = param_value;
 		this.id = id;
 		measurements = new ArrayList<Measurement>();
-		
+
 		// keep this loop at the end of the constructor!
 		for( Method m: ann.getBenchmarkMethods() ) {
 			if ( method == m ) {
 				micro = true;
 				return;
-			} 
+			}
 		}
 		micro = false;
 	}
@@ -64,7 +64,7 @@ final class SimpleTrial implements Trial {
 	void addMeasurement( Measurement measurement ) {
 		measurements.add( measurement );
 	}
-	
+
 	SlideRuleAnnotations getSlideRuleAnnotations() {
 		return ann;
 	}
@@ -76,7 +76,7 @@ final class SimpleTrial implements Trial {
 	boolean isMicro() {
 		return micro;
 	}
-	
+
 	Field[] getParam() {
 		return param;
 	}
@@ -94,6 +94,20 @@ final class SimpleTrial implements Trial {
 		String r = "";
 		r += bench_class.getName() + "." + method.getName() + "()";
 		r += PolymorphicType.nameParams( param, param_value );
+		return r;
+	}
+
+	static double[] extractMeans( ArrayList<Trial> alt ) {
+		double[] r = new double[ alt.size() ];
+		int i = 0;
+		for ( Trial t: alt ) {
+			for( Measurement m: t.measurements() ) {
+				if ( "elapsed_time_ns".equals( m.description() ) ) {
+					r[ i++ ] = (double)(Double) m.value().value;
+					break;
+				}
+			}
+		}
 		return r;
 	}
 }

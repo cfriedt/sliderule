@@ -62,32 +62,50 @@ public class SlideRuleAnnotations {
 	private final TreeSet[] field_array;
 	private final TreeSet[] method_array;
 
-	class MemberComparator implements Comparator<Member> {
+	static class ClassComparator implements Comparator<Class<?>> {
+		@Override
+		public int compare( Class<?> o1, Class<?> o2 ) {
+			if ( o1 == o2 ) {
+				return 0;
+			}
+			String o1n = o1.getName();
+			String o2n = o2.getName();
+			return o1n.compareTo( o2n );
+		}
+	}
+
+	static class MemberComparator implements Comparator<Member> {
 		@Override
 		public int compare( Member o1, Member o2 ) {
 			if ( o1 == o2 ) {
 				return 0;
 			}
 			String o1n = o1.getName();
-			String o2n = o1.getName();
-			return o1n.compareTo( o2n );
-		}		
+			String o2n = o2.getName();
+			int r = o1n.compareTo( o2n );
+			return r;
+		}
 	}
 
 	public SlideRuleAnnotations( Class<?> klass ) {
+
 		this.klass = klass;
+
 		field_array = new TreeSet[ field_map.size() ];
 		for( int i=0; i < field_array.length; i++ ) {
 			field_array[i] = new TreeSet<Field>( new MemberComparator() );
 		}
+
 		method_array = new TreeSet[ method_map.size() ];
 		for( int i=0; i < method_array.length; i++ ) {
 			method_array[i] = new TreeSet<Method>( new MemberComparator() );
 		}
 
 		ArrayList<Field> fs = new ArrayList<Field>();
-		fs.addAll( Arrays.asList( klass.getFields() ) );
-		fs.addAll( Arrays.asList( klass.getDeclaredFields() ) );
+		for( Class<?> k = klass; k != Object.class; k = k.getSuperclass() ) {
+			fs.addAll( Arrays.asList( k.getFields() ) );
+			fs.addAll( Arrays.asList( k.getDeclaredFields() ) );
+		}
 
 		for( Field f: fs ) {
 			f.setAccessible( true );
@@ -95,8 +113,10 @@ public class SlideRuleAnnotations {
 		}
 
 		ArrayList<Method> ms = new ArrayList<Method>();
-		ms.addAll( Arrays.asList( klass.getMethods() ) );
-		ms.addAll( Arrays.asList( klass.getDeclaredMethods() ) );
+		for( Class<?> k = klass; k != Object.class; k = k.getSuperclass() ) {
+			ms.addAll( Arrays.asList( k.getMethods() ) );
+			ms.addAll( Arrays.asList( k.getDeclaredMethods() ) );
+		}
 
 		for( Method m: ms ) {
 			m.setAccessible( true );
@@ -175,7 +195,7 @@ public class SlideRuleAnnotations {
 	public Class<?> getAnnotatedClass() {
 		return klass;
 	}
-	
+
 	public SortedSet<Field> getParamFields() {
 		return field_array[ FIELD_PARAM ];
 	}
@@ -197,5 +217,10 @@ public class SlideRuleAnnotations {
 	}
 	public Set<Method> getMacrobenchmarkMethods() {
 		return method_array[ METHOD_MACROBENCHMARK ];
+	}
+
+	@Override
+	public String toString() {
+		return klass.getName() + " with SlideRule Annotations";
 	}
 }

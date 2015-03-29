@@ -134,7 +134,7 @@ public class GoogleChartsResultProcessor extends InMemoryResultProcessor {
 			return;
 		}
 
-		// create one file containing up to two graphs for each permutation of parameters (one for microbenchmarks, one for macrobenchmarks) 
+		// create one file containing up to two graphs for each permutation of parameters (one for microbenchmarks, one for macrobenchmarks)
 		for( int row = 0; row < pmt.length; row++ ) {
 
 			List<PolymorphicType> lpmt = Arrays.asList( pmt[ row ] );
@@ -142,7 +142,7 @@ public class GoogleChartsResultProcessor extends InMemoryResultProcessor {
 
 			if ( ! subset.isEmpty() ) {
 				File file = genFile( subset );
-				SlideRuleGoogleChartsWriter gcw = new SlideRuleGoogleChartsWriter( new FileOutputStream( file ), subset );
+				SlideRuleGoogleChartsWriter gcw = new SlideRuleGoogleChartsWriter( date, new FileOutputStream( file ), subset );
 				gcw.write();
 				gcw.close();
 			}
@@ -174,7 +174,7 @@ public class GoogleChartsResultProcessor extends InMemoryResultProcessor {
 					}
 
 					File file = genFile( subset );
-					SlideRuleGoogleChartsWriter gcw = new SlideRuleGoogleChartsWriter( new FileOutputStream( file ), subset );
+					SlideRuleGoogleChartsWriter gcw = new SlideRuleGoogleChartsWriter( date, new FileOutputStream( file ), subset );
 					gcw.write();
 					gcw.close();
 				}
@@ -191,9 +191,9 @@ public class GoogleChartsResultProcessor extends InMemoryResultProcessor {
 	}
 
 	static boolean trialsAreParametricSweep( TreeMap<UUID,ArrayList<Trial>> trials ) {
-		return -1 == parametricSweepIndex( trials );
+		return -1 != parametricSweepIndex( trials );
 	}
-	
+
 	static int parametricSweepIndex( TreeMap<UUID,ArrayList<Trial>> trials ) {
 		int r = -1;
 
@@ -210,7 +210,7 @@ public class GoogleChartsResultProcessor extends InMemoryResultProcessor {
 				throw new IllegalStateException();
 			}
 			st = (SimpleTrial) t;
-			PolymorphicType[] param = st.getParamValue(); 
+			PolymorphicType[] param = st.getParamValue();
 			if ( null == p0 ) {
 				p0 = param;
 			} else {
@@ -222,7 +222,7 @@ public class GoogleChartsResultProcessor extends InMemoryResultProcessor {
 				break;
 			}
 		}
-		
+
 		if ( sweep && null != p0 && null != p1 && p1.length == p0.length ) {
 			for( int i = 0; i < p0.length; i++ ) {
 				if ( ! p0[ i ].equals( p1[ i ] ) ) {
@@ -230,10 +230,10 @@ public class GoogleChartsResultProcessor extends InMemoryResultProcessor {
 				}
 			}
 		}
-		
+
 		return r;
 	}
-	
+
 	private File genFile( TreeMap<UUID, ArrayList<Trial>> trials ) throws IOException {
 
 		// Parameters will either all be the same or not.
@@ -243,7 +243,7 @@ public class GoogleChartsResultProcessor extends InMemoryResultProcessor {
 		// call tag it "<param:val><param:val>..."
 
 		SimpleTrial st;
-		
+
 		Trial t = trials.firstEntry().getValue().get( 0 );
 		if ( ! ( t instanceof SimpleTrial ) ) {
 			throw new IllegalStateException();
@@ -254,22 +254,27 @@ public class GoogleChartsResultProcessor extends InMemoryResultProcessor {
 
 		boolean sweep = trialsAreParametricSweep( trials );
 		String tag = "";
-		
+
 		if ( sweep ) {
 			int delta = parametricSweepIndex( trials );
-			tag = "sweep:" + field[ delta ].getName(); 
+			if ( -1 == delta ) {
+				throw new IllegalStateException();
+			}
+			tag = "sweep:" + field[ delta ].getName();
 		} else {
 			tag = PolymorphicType.nameParams( field, st.getParamValue() );
+			tag = tag.replace( "[", "" );
+			tag = tag.replace( "]", "" );
 		}
-		
+
 		String file_name = genFileName( tag );
 		File file = new File( file_name );
 		if ( file.isDirectory() ) {
 			throw new IOException( "file '" + file_name + "' exists and is a directory." );
 		}
 		file.mkdirs();
-		file.delete(); 
-		
+		file.delete();
+
 		return file;
 	}
 

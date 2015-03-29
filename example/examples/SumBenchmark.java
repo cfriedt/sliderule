@@ -17,8 +17,8 @@
 
 package examples;
 
-public final class FactorialBenchmark extends ABenchmark {
-	public FactorialBenchmark() {
-		super( new Factorial() );
+public final class SumBenchmark extends ABenchmark {
+	public SumBenchmark() {
+		super( new Sum() );
 	}
 }

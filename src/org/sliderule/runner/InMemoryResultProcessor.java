@@ -57,7 +57,7 @@ public class InMemoryResultProcessor implements ResultProcessor {
 
 		alt = trial_set.get( trial.id() );
 		alt.add( trial );
-		
+
 		for( Measurement m: trial.measurements() ) {
 			if ( "warning".equals( m.description() ) ) {
 				System.err.println( m.value() );
@@ -71,7 +71,7 @@ public class InMemoryResultProcessor implements ResultProcessor {
 
 	// XXX: I now understand why Caliper decided to use JPA
 	// https://docs.oracle.com/html/E13981_01/ent30qry001.htm
-	
+
 	public static TreeMap<UUID,ArrayList<Trial>> filterByUUID( TreeMap<UUID,ArrayList<Trial>> trial_set, Set<UUID> ids  ) {
 		TreeMap<UUID,ArrayList<Trial>> r = new TreeMap<UUID,ArrayList<Trial>>();
 		for( Map.Entry<UUID,ArrayList<Trial>> e: trial_set.entrySet() ) {
@@ -87,26 +87,32 @@ public class InMemoryResultProcessor implements ResultProcessor {
 	}
 	public static TreeMap<UUID,ArrayList<Trial>> filterByClass( TreeMap<UUID,ArrayList<Trial>> trial_set, Set<Class<?>> classes  ) {
 		TreeMap<UUID,ArrayList<Trial>> r = new TreeMap<UUID,ArrayList<Trial>>();
+		for( Class<?> clazz: classes ) {
+			TreeMap<UUID,ArrayList<Trial>> more = filterByClass( trial_set, clazz );
+			r.putAll( more );
+		}
+		return r;
+	}
+	public static TreeMap<UUID,ArrayList<Trial>> filterByClass( TreeMap<UUID,ArrayList<Trial>> trial_set, Class<?> clazz  ) {
+		TreeMap<UUID,ArrayList<Trial>> r = new TreeMap<UUID,ArrayList<Trial>>();
 		for( Map.Entry<UUID,ArrayList<Trial>> e: trial_set.entrySet() ) {
-			for( Class<?> clazz: classes ) {
-				UUID key = e.getKey();
-				ArrayList<Trial> val = e.getValue();
-				if ( 0 == val.size() ) {
-					return r;
-				}
-				Trial prototype = val.get( 0 );
-				if ( null == prototype ) {
-					throw new IllegalStateException( "trials cannot be null!" );
-				}
-				if ( ! ( prototype instanceof SimpleTrial ) ) {
-					continue;
-				}
-				SimpleTrial st = (SimpleTrial) prototype;
-				SlideRuleAnnotations sra = st.getSlideRuleAnnotations();
-				Class<?> annotated_class = sra.getAnnotatedClass();
-				if ( annotated_class == clazz ) {
-					r.put( key, val );
-				}
+			UUID key = e.getKey();
+			ArrayList<Trial> val = e.getValue();
+			if ( 0 == val.size() ) {
+				return r;
+			}
+			Trial prototype = val.get( 0 );
+			if ( null == prototype ) {
+				throw new IllegalStateException( "trials cannot be null!" );
+			}
+			if ( ! ( prototype instanceof SimpleTrial ) ) {
+				continue;
+			}
+			SimpleTrial st = (SimpleTrial) prototype;
+			SlideRuleAnnotations sra = st.getSlideRuleAnnotations();
+			Class<?> annotated_class = sra.getAnnotatedClass();
+			if ( annotated_class == clazz ) {
+				r.put( key, val );
 			}
 		}
 		return r;
@@ -137,27 +143,35 @@ public class InMemoryResultProcessor implements ResultProcessor {
 		}
 		return r;
 	}
+	public static TreeMap<UUID,ArrayList<Trial>> filterByMethod( TreeMap<UUID,ArrayList<Trial>> trial_set, Method method ) {
+		TreeMap<UUID,ArrayList<Trial>> r = new TreeMap<UUID,ArrayList<Trial>>();
+		for( Map.Entry<UUID,ArrayList<Trial>> e: trial_set.entrySet() ) {
+			UUID key = e.getKey();
+			ArrayList<Trial> val = e.getValue();
+			if ( 0 == val.size() ) {
+				return r;
+			}
+			Trial prototype = val.get( 0 );
+			if ( null == prototype ) {
+				throw new IllegalStateException( "trials cannot be null!" );
+			}
+			if ( ! ( prototype instanceof SimpleTrial ) ) {
+				continue;
+			}
+			SimpleTrial st = (SimpleTrial) prototype;
+			Method meth = st.getMethod();
+			if ( meth.equals( method ) ) {
+				r.put( key, val );
+			}
+		}
+		return r;
+	}
 	public static TreeMap<UUID,ArrayList<Trial>> filterByMethod( TreeMap<UUID,ArrayList<Trial>> trial_set, Set<Method> methods  ) {
 		TreeMap<UUID,ArrayList<Trial>> r = new TreeMap<UUID,ArrayList<Trial>>();
 		for( Map.Entry<UUID,ArrayList<Trial>> e: trial_set.entrySet() ) {
 			for( Method method: methods ) {
-				UUID key = e.getKey();
-				ArrayList<Trial> val = e.getValue();
-				if ( 0 == val.size() ) {
-					return r;
-				}
-				Trial prototype = val.get( 0 );
-				if ( null == prototype ) {
-					throw new IllegalStateException( "trials cannot be null!" );
-				}
-				if ( ! ( prototype instanceof SimpleTrial ) ) {
-					continue;
-				}
-				SimpleTrial st = (SimpleTrial) prototype;
-				Method meth = st.getMethod();
-				if ( meth.equals( method ) ) {
-					r.put( key, val );
-				}
+				TreeMap<UUID,ArrayList<Trial>> more = filterByMethod( trial_set, method );
+				r.putAll( more );
 			}
 		}
 		return r;
@@ -208,7 +222,7 @@ public class InMemoryResultProcessor implements ResultProcessor {
 				for( Field f: fi ) {
 					if ( f.equals( field ) ) {
 						r.put( key, val );
-					}					
+					}
 				}
 			}
 		}
@@ -235,7 +249,7 @@ public class InMemoryResultProcessor implements ResultProcessor {
 				for( Field f: fi ) {
 					if ( f.getName().equals( field ) ) {
 						r.put( key, val );
-					}					
+					}
 				}
 			}
 		}
@@ -270,7 +284,7 @@ public class InMemoryResultProcessor implements ResultProcessor {
 								r.put( key, val );
 							}
 						}
-					}					
+					}
 				}
 			}
 		}
@@ -305,7 +319,7 @@ public class InMemoryResultProcessor implements ResultProcessor {
 								r.put( key, val );
 							}
 						}
-					}					
+					}
 				}
 			}
 		}

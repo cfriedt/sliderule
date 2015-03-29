@@ -70,6 +70,10 @@ public class Algorithm {
 			this.klass = klass;
 			this.instance = instance;
 		}
+		@Override
+		public String toString() {
+			return klass.toString();
+		}
 	}
 
 	private static int verbose = 0;
@@ -527,11 +531,17 @@ public class Algorithm {
 			SlideRuleAnnotations k = cai.klass;
 			Object o = cai.instance;
 
+			// was complaining about "java.lang.IllegalArgumentException: Can not set int field examples.FactorialBenchmark.number to examples.SumBenchmark"
+			ArrayList<Field> alf = new ArrayList<Field>();
+			alf.addAll( k.getParamFields() );
+			param_fields = alf.toArray( new Field[0] );
+
 			for( int row=0; row < param_values.length; row++ ) {
 
 				// set all parameters for a specific set of trials
 				for( int col=0; col < param_values[ row ].length; col++ ) {
 					Field f = param_fields[ col ];
+					f.setAccessible( true );
 					f.set( o, param_values[ row ][ col ].value );
 				}
 
@@ -564,6 +574,7 @@ public class Algorithm {
 					continue;
 				}
 			}
+			D( "finished all parameter permutations. moving on to next class" );
 		}
 		context.results_processor.close();
 	}
@@ -577,7 +588,7 @@ public class Algorithm {
 	{
 		verbose = a.debug;
 
-		if ( ! a.bench_classes.isEmpty() ) {
+		if ( ! c.getAnnotatedClasses().isEmpty() ) {
 			Algorithm algo = new Algorithm( a, c );
 			algo.setup();
 			algo.bench();

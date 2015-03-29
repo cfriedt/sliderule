@@ -17,8 +17,34 @@
 
 package examples;
 
-public final class FactorialBenchmark extends ABenchmark {
-	public FactorialBenchmark() {
-		super( new Factorial() );
+public class Sum extends AOperation {
+
+	@Override
+	long iterative( int number ) {
+		checkValidNumber( number );
+		long result = 0;
+		for ( ; number > 0; number-- ) {
+			result += number;
+		}
+		return result;
+	}
+
+	@Override
+	long recursive( int number ) {
+		switch ( checkValidNumber( number ) ) {
+		case 0:
+			return 0;
+		default:
+			return recursive( number - 1 ) + number;
+		}
+	}
+
+	static long tailRecursive( int number, long result ) {
+		switch ( checkValidNumber( number ) ) {
+		case 0:
+			return result;
+		default:
+			return tailRecursive( number - 1, result + number );
+		}
 	}
 }

@@ -17,9 +17,10 @@
 
 package examples;
 
-public class Factorial {
+public class Factorial extends AOperation {
 
-	static long iterative( int number ) {
+	@Override
+	long iterative( int number ) {
 		checkValidNumber( number );
 		long result = 1;
 		for ( ; number > 0; number-- ) {
@@ -28,7 +29,8 @@ public class Factorial {
 		return result;
 	}
 
-	static long recursive( int number ) {
+	@Override
+	long recursive( int number ) {
 		switch ( checkValidNumber( number ) ) {
 		case 0:
 			return 1;
@@ -44,12 +46,5 @@ public class Factorial {
 		default:
 			return tailRecursive( number - 1, result * number );
 		}
-	}
-
-	private static int checkValidNumber( int number ) {
-		if ( number < 0 ) {
-			throw new IllegalArgumentException();
-		}
-		return number;
 	}
 }

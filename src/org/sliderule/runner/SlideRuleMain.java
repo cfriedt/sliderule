@@ -275,21 +275,19 @@ public final class SlideRuleMain {
 	{
 		SlideRuleAnnotations prev_ac = null;
 
+		if ( arguments.config_properties.containsKey( "results.console.class" ) ) {
+			ClassLoader cl = ClassLoader.getSystemClassLoader();
+			Class<ResultProcessor> crp = (Class<ResultProcessor>) cl.loadClass( arguments.config_properties.getProperty( "results.console.class" ) );
+			ResultProcessor rp = (ResultProcessor) crp.newInstance();
+			context.setResultProcessor( rp );
+		}
+
 		for( Class<?> klass: arguments.bench_classes ) {
 
 			SlideRuleAnnotations ac = new SlideRuleAnnotations( klass );
-
-			if ( arguments.config_properties.containsKey( "results.console.class" ) ) {
-				ClassLoader cl = ClassLoader.getSystemClassLoader();
-				Class<ResultProcessor> crp = (Class<ResultProcessor>) cl.loadClass( arguments.config_properties.getProperty( "results.console.class" ) );
-				ResultProcessor rp = (ResultProcessor) crp.newInstance();
-				context.setResultProcessor( rp );
-			}
-
 			if ( null == prev_ac ) {
 				if ( ! ( ac.getBenchmarkMethods().isEmpty() && ac.getMacrobenchmarkMethods().isEmpty() ) ) {
 					prev_ac = ac;
-					context.addAnnotatedClass( ac );
 				}
 			} else {
 				if ( !(
@@ -304,6 +302,7 @@ public final class SlideRuleMain {
 					throw new NonUniformBenchmarkClassesException();
 				}
 			}
+			context.addAnnotatedClass( ac );
 		}
 	}
 	private void go()
