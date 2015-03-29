@@ -194,41 +194,52 @@ public class GoogleChartsResultProcessor extends InMemoryResultProcessor {
 		return -1 != parametricSweepIndex( trials );
 	}
 
-	static int parametricSweepIndex( TreeMap<UUID,ArrayList<Trial>> trials ) {
+	@SuppressWarnings("unchecked")
+	static int parametricSweepIndex( TreeMap<UUID, ArrayList<Trial>> trials ) {
+
+		// for this to be the case, only one parameter may be changed throughout all of the
+		// trials recorded for an experiment
+
 		int r = -1;
 
-		boolean sweep = false;
+		Trial t;
 		SimpleTrial st;
+		PolymorphicType[] pmt;
 
-		PolymorphicType[] p0 = null;
-		PolymorphicType[] p1 = null;
+		t = trials.firstEntry().getValue().get( 0 );
+		if ( ! ( t instanceof SimpleTrial ) ) {
+			throw new IllegalStateException();
+		}
+		st = (SimpleTrial) t;
 
-		HashSet<PolymorphicType[]> p = new HashSet<PolymorphicType[]>();
+		HashSet<PolymorphicType>[] fields_varied = new HashSet[ st.getParamValue().length ];
+		for( int i = 0; i < fields_varied.length; i++ ) {
+			fields_varied[ i ] = new HashSet<PolymorphicType>();
+		}
+
 		for( ArrayList<Trial> alt: trials.values() ) {
-			Trial t = alt.get( 0 );
+			t = alt.get( 0 );
 			if ( ! ( t instanceof SimpleTrial ) ) {
 				throw new IllegalStateException();
 			}
 			st = (SimpleTrial) t;
-			PolymorphicType[] param = st.getParamValue();
-			if ( null == p0 ) {
-				p0 = param;
-			} else {
-				p1 = param;
-			}
-			p.add( param );
-			if ( p.size() > 1 && null != p0 && null != p1 ) {
-				sweep = true;
-				break;
+			pmt = st.getParamValue();
+			for( int i = 0; i < pmt.length; i++ ) {
+				fields_varied[ i ].add( pmt[ i ] );
 			}
 		}
 
-		if ( sweep && null != p0 && null != p1 && p1.length == p0.length ) {
-			for( int i = 0; i < p0.length; i++ ) {
-				if ( ! p0[ i ].equals( p1[ i ] ) ) {
-					r = i;
-				}
+		int idx = -1;
+		int n_fields_with_more_than_one_value = 0;
+		for( int i = 0; i < fields_varied.length; i++ ) {
+			if ( fields_varied[ i ].size() > 1 && -1 == idx -1 ) {
+				idx = i;
 			}
+			n_fields_with_more_than_one_value += fields_varied[ i ].size() > 1 ? 1 : 0;
+		}
+
+		if ( 1 == n_fields_with_more_than_one_value ) {
+			r = idx;
 		}
 
 		return r;

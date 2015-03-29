@@ -71,6 +71,7 @@ class SlideRuleGoogleChartsWriter {
 	}
 
 	int doSimpleChart( boolean micro, int chart_idx ) {
+		int i;
 
 		SimpleTrial prototype = (SimpleTrial) trials.firstEntry().getValue().get( 0 );
 
@@ -81,27 +82,39 @@ class SlideRuleGoogleChartsWriter {
 			return 0;
 		}
 
-		pw.println( "      var data" + chart_idx + " = google.visualization.arrayToDataTable([" );
-		pw.println( "        [ 'Test', 'Mean Time (ns)' ]," );
+		Set<Method> meth = micro ? ann.getBenchmarkMethods() : ann.getMacrobenchmarkMethods();
 
-		int i;
+		pw.println( "      var data" + chart_idx + " = google.visualization.arrayToDataTable([" );
+		pw.print( "        [ 'Test', " );
 		i=0;
-		for( Method m: micro ? ann.getBenchmarkMethods() : ann.getMacrobenchmarkMethods() ) {
-			subset2 = InMemoryResultProcessor.filterByMethod( subset1, m );
-			if ( 1 != subset2.size() ) {
-				throw new IllegalStateException();
+		for( Method m: meth ) {
+			pw.print( "'" + m.getName() + "'" );
+			if ( i < meth.size() - 1 ) {
+				pw.print( "," );
 			}
+			i++;
+		}
+		pw.println( " ]," );
+
+		pw.print( "        [ 'Mean Time (ns)', " );
+
+		i=0;
+		for( Method m: meth ) {
+			subset2 = InMemoryResultProcessor.filterByMethod( subset1, m );
+//			if ( 1 != subset2.size() ) {
+//				throw new IllegalStateException();
+//			}
 			ArrayList<Trial> alt = subset2.firstEntry().getValue();
 			OfflineStatistics os = new OfflineStatistics( SimpleTrial.extractMeans( alt ) );
-			pw.print( "        [ '" + m.getName() + "', " + os.mean() + " ]" );
+			pw.print( "'" + os.mean() + "'" );
 			if ( i < methods.size() - 1 ) {
 				pw.print( "," );
 			}
-			pw.println();
 			i++;
 		}
+		pw.println( " ]" );
 
-		pw.println( "]);" );
+		pw.println( "      ]);" );
 
 		pw.println( "      var options" + chart_idx + " = {" );
 		pw.println( "        chart: {" );
@@ -119,6 +132,8 @@ class SlideRuleGoogleChartsWriter {
 
 	int doMultiChart( boolean micro, int chart_idx ) {
 
+		int i, j;
+		Set<Method> meth;
 		SimpleTrial prototype = (SimpleTrial) trials.firstEntry().getValue().get( 0 );
 
 		TreeMap<UUID,ArrayList<Trial>> subset1, subset2, subset3;
@@ -128,16 +143,29 @@ class SlideRuleGoogleChartsWriter {
 			return 0;
 		}
 
-		for( Method m: micro ? ann.getBenchmarkMethods() : ann.getMacrobenchmarkMethods() ) {
-			subset2 = InMemoryResultProcessor.filterByMethod( trials, m );
+		pw.println( "      var data" + chart_idx + " = google.visualization.arrayToDataTable([" );
+		pw.print( "        [ 'Class', " );
 
-			pw.println( "      var data" + chart_idx + " = google.visualization.arrayToDataTable([" );
-			pw.print( "        [ 'Class', 'Mean Time (ns)' ]," );
+		i = 0;
+		meth = micro ? ann.getBenchmarkMethods() : ann.getMacrobenchmarkMethods();
+		for( Method m: meth ) {
+			pw.print( "'" + m.getName() + "'" );
+			if ( i < meth.size() - 1 ) {
+				pw.print( ", " );
+			}
+		}
+		pw.println( " ]," );
 
-			int i;
+		j=0;
+		for( Class<?> c: classes ) {
+			subset2 = InMemoryResultProcessor.filterByClass( subset1, c );
+
+			pw.print( "[ '" + c.getName() + "', " );
+
 			i=0;
-			for( Class<?> c: classes ) {
-				subset3 = InMemoryResultProcessor.filterByClass( subset2, c );
+			for( Method m: meth ) {
+
+				subset3 = InMemoryResultProcessor.filterByMethod( subset2, m );
 
 				if ( 1 != subset3.size() ) {
 					throw new IllegalStateException();
@@ -145,30 +173,36 @@ class SlideRuleGoogleChartsWriter {
 
 				ArrayList<Trial> alt = subset3.firstEntry().getValue();
 				OfflineStatistics os = new OfflineStatistics( SimpleTrial.extractMeans( alt ) );
-				pw.print( "        [ '" + c.getName() + "', " + os.mean() + " ]" );
-				if ( i < classes.size() - 1 ) {
+				pw.print( "'" + os.mean() + "'" );
+				if ( i < meth.size() - 1 ) {
 					pw.print( "," );
 				}
-				pw.println();
 				i++;
 			}
-
-			pw.println( "]);" );
-
-			pw.println( "      var options" + chart_idx + " = {" );
-			pw.println( "        chart: {" );
-			pw.println( "          title: '" + m.getName() + " " + ( micro ? "Micro" : "Macro" ) + "-Benchmark, " + date + "'," );
-			pw.println( "          subtitle: 'Parameters: " + PolymorphicType.nameParams( prototype.getParam(), prototype.getParamValue() ) + "'" );
-			pw.println( "        }," );
-			pw.println( "        bars: 'horizontal' // Required for Material Bar Charts." );
-			pw.println( "      };" );
-
-			pw.println( "      var chart" + chart_idx + " = new google.charts.Bar(document.getElementById('chart" + chart_idx + "'));" );
-
-			pw.println( "      chart" + chart_idx + ".draw(data" + chart_idx + ", " + "options" + chart_idx + ");" );
-			chart_idx++;
+			pw.print( " ]" );
+			if ( j < classes.size() - 1 ) {
+				pw.print( "," );
+			}
+			pw.println();
+			j++;
 		}
-		return chart_idx;
+
+		pw.println( "]);" );
+
+		pw.println( "      var options" + chart_idx + " = {" );
+		pw.println( "        chart: {" );
+		pw.println( "          title: '" + ( micro ? "Micro" : "Macro" ) + "-Benchmark, Mean Time (ns), " + date + "'," );
+		pw.println( "          subtitle: 'Parameters: " + PolymorphicType.nameParams( prototype.getParam(), prototype.getParamValue() ) + "'" );
+		pw.println( "        }," );
+		pw.println( "        bars: 'horizontal' // Required for Material Bar Charts." );
+		pw.println( "      };" );
+
+		pw.println( "      var chart" + chart_idx + " = new google.charts.Bar(document.getElementById('chart" + chart_idx + "'));" );
+
+		pw.println( "      chart" + chart_idx + ".draw(data" + chart_idx + ", " + "options" + chart_idx + ");" );
+		chart_idx++;
+
+		return 1;
 	}
 
 	void writeSimple() {
@@ -192,6 +226,8 @@ class SlideRuleGoogleChartsWriter {
 		pw.println( foo7 );
 		for( int i = 0; i < chart_idx; i++ ) {
 			pw.println( "    <div id=\"chart" + i + "\" style=\"width: 900px; height: 500px;\"></div>" );
+//			pw.println( "    <div id=\"chart" + i + "\"></div>" );
+//			pw.println( "    <div id=\"chart" + i + "\" style=\"width: 70%;\"></div>" );
 		}
 		pw.println( foo8 );
 	}

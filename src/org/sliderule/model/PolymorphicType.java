@@ -150,13 +150,13 @@ public final class PolymorphicType implements Comparable<PolymorphicType> {
 		if ( null == o || PolymorphicType.class != o.getClass() ) {
 			return false;
 		}
-		PolymorphicType pmt = (PolymorphicType) o; 
+		PolymorphicType pmt = (PolymorphicType) o;
 		return 0 == compareTo( pmt );
 	}
 
 	@Override
 	public String toString() {
-		return "" + klass + ":" + ( null == value ? "(null)" : "" + value );
+		return "" + klass.getName() + ":" + ( null == value ? "(null)" : "" + value );
 	}
 
 	public static String nameParams( Field[] param, PolymorphicType[] param_value ) {

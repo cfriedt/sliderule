@@ -10,9 +10,14 @@ abstract class ABenchmark {
 	}
 
 	@Param({
+		"a",
+		"b",
+	}) String foo;
+
+	@Param({
 		"5",
-//		"10",
-//		"20",
+		"10",
+		"20",
 	}) int number; // -Dnumber=1,2,3
 
 	@Benchmark

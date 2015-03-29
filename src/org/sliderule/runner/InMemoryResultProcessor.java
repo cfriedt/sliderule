@@ -256,37 +256,45 @@ public class InMemoryResultProcessor implements ResultProcessor {
 		return r;
 	}
 	public static TreeMap<UUID,ArrayList<Trial>> filterByParamValue( TreeMap<UUID,ArrayList<Trial>> trial_set, List<Field> fields, List<PolymorphicType> values ) {
+
 		if ( fields.size() != values.size() ) {
 			throw new IllegalArgumentException( "fields and values must be same size" );
 		}
+
 		TreeMap<UUID,ArrayList<Trial>> r = new TreeMap<UUID,ArrayList<Trial>>();
+
 		for( Map.Entry<UUID,ArrayList<Trial>> e: trial_set.entrySet() ) {
-			for( Field field: fields ) {
-				UUID key = e.getKey();
-				ArrayList<Trial> val = e.getValue();
-				if ( 0 == val.size() ) {
-					return r;
-				}
-				Trial prototype = val.get( 0 );
-				if ( null == prototype ) {
-					throw new IllegalStateException( "trials cannot be null!" );
-				}
-				if ( ! ( prototype instanceof SimpleTrial ) ) {
-					continue;
-				}
-				SimpleTrial st = (SimpleTrial) prototype;
-				Field[] fi = st.getParam();
-				PolymorphicType[] pmt = st.getParamValue();
-				for( int i = 0; i < fi.length; i++ ) {
-					if ( fi[ i ].equals( field ) ) {
-						for( PolymorphicType v: values ) {
-							if ( pmt[ i ].equals( v ) ) {
-								r.put( key, val );
-							}
-						}
-					}
+
+			UUID key = e.getKey();
+			ArrayList<Trial> val = e.getValue();
+
+			SimpleTrial st = (SimpleTrial) val.get( 0 );
+			Field[] f = st.getParam();
+			PolymorphicType[] pmt = st.getParamValue();
+
+			boolean fields_match = true;
+			for( int i = 0; i < values.size(); i++ ) {
+				if ( ! f[ i ].equals( fields.get( i ) ) ) {
+					fields_match = false;
+					break;
 				}
 			}
+			if ( ! fields_match ) {
+				continue;
+			}
+
+			boolean values_match = true;
+			for( int i = 0; i < fields.size(); i++ ) {
+				if ( ! pmt[ i ].equals( values.get( i ) ) ) {
+					values_match = false;
+					break;
+				}
+			}
+			if ( ! values_match ) {
+				continue;
+			}
+
+			r.put( key, val );
 		}
 		return r;
 	}
