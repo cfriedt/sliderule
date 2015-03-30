@@ -1,0 +1,43 @@
+<html>
+  <head>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+      google.load("visualization", "1.1", {packages:["bar"]});
+      google.setOnLoadCallback(drawVisualization);
+      function drawVisualization() {
+      var data0 = google.visualization.arrayToDataTable([
+        [ 'Class', 'iterative', 'recursive',  ],
+[ 'examples.FactorialBenchmark', '16.333333333333332','33.84406779661017' ],
+[ 'examples.SumBenchmark', '7.668421052631579','26.9037037037037' ]
+]);
+      var options0 = {
+        chart: {
+          title: 'Micro-Benchmark, Mean Time (ns), 20150330',
+          subtitle: 'Parameters: [foo:java.lang.String:a,number:int:20]'
+        },
+        bars: 'horizontal' // Required for Material Bar Charts.
+      };
+      var chart0 = new google.charts.Bar(document.getElementById('chart0'));
+      chart0.draw(data0, options0);
+      var data1 = google.visualization.arrayToDataTable([
+        [ 'Class', 'macroIterative', 'macroRecursive',  ],
+[ 'examples.FactorialBenchmark', '91839.50617283951','319908.3333333333' ],
+[ 'examples.SumBenchmark', '83000.0','258160.4938271605' ]
+]);
+      var options1 = {
+        chart: {
+          title: 'Macro-Benchmark, Mean Time (ns), 20150330',
+          subtitle: 'Parameters: [foo:java.lang.String:a,number:int:20]'
+        },
+        bars: 'horizontal' // Required for Material Bar Charts.
+      };
+      var chart1 = new google.charts.Bar(document.getElementById('chart1'));
+      chart1.draw(data1, options1);
+    }
+    </script>
+  </head>
+  <body>
+    <div id="chart0" style="width: 900px; height: 500px;"></div>
+    <div id="chart1" style="width: 900px; height: 500px;"></div>
+  </body>
+</html>

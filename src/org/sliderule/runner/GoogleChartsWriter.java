@@ -7,7 +7,7 @@ import java.util.*;
 import org.sliderule.model.*;
 import org.sliderule.stats.*;
 
-class SlideRuleGoogleChartsWriter {
+class GoogleChartsWriter {
 
 	// InMemoryResultProcessor.
 
@@ -20,7 +20,7 @@ class SlideRuleGoogleChartsWriter {
 	final boolean multi_class;
 	final SlideRuleAnnotations ann;
 
-	public SlideRuleGoogleChartsWriter( String date, OutputStream os, TreeMap<UUID,ArrayList<Trial>> trials ) {
+	public GoogleChartsWriter( String date, OutputStream os, TreeMap<UUID,ArrayList<Trial>> trials ) {
 		this.date = date;
 		this.pw = new PrintWriter( os );
 		this.trials = trials;
@@ -389,7 +389,7 @@ class SlideRuleGoogleChartsWriter {
 
 			pw.println( "      var options" + chart_idx + " = {" );
 			pw.println( "        chart: {" );
-			pw.println( "          title: '" + m.getName() + "() "  + ( micro ? "Micro" : "Macro" ) + "-Benchmark, " + date + "'," );
+			pw.println( "          title: '" + m.getName() + "() "  + ( micro ? "Micro" : "Macro" ) + "-Benchmark (ns), " + date + "'," );
 			pw.println( "          subtitle: 'Parameters: " + PolymorphicType.nameParams( base_name, base_case ) + "'" );
 			pw.println( "        }," );
 			pw.println( "        bars: 'horizontal' // Required for Material Bar Charts." );

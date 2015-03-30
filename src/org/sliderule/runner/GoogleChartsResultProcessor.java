@@ -142,7 +142,7 @@ public class GoogleChartsResultProcessor extends InMemoryResultProcessor {
 
 			if ( ! subset.isEmpty() ) {
 				File file = genFile( subset );
-				SlideRuleGoogleChartsWriter gcw = new SlideRuleGoogleChartsWriter( date, new FileOutputStream( file ), subset );
+				GoogleChartsWriter gcw = new GoogleChartsWriter( date, new FileOutputStream( file ), subset );
 				gcw.write();
 				gcw.close();
 			}
@@ -174,7 +174,7 @@ public class GoogleChartsResultProcessor extends InMemoryResultProcessor {
 					}
 
 					File file = genFile( subset );
-					SlideRuleGoogleChartsWriter gcw = new SlideRuleGoogleChartsWriter( date, new FileOutputStream( file ), subset );
+					GoogleChartsWriter gcw = new GoogleChartsWriter( date, new FileOutputStream( file ), subset );
 					gcw.write();
 					gcw.close();
 				}
