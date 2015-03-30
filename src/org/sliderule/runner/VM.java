@@ -19,11 +19,8 @@ package org.sliderule.runner;
 import java.util.*;
 import java.io.*;
 import java.lang.management.*;
-import java.lang.reflect.*;
 
 import javax.management.*;
-
-import org.sliderule.model.*;
 
 import com.sun.management.*;
 

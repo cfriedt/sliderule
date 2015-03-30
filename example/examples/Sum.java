@@ -1,4 +1,5 @@
 /*
+ * Copyright (C) 2013 Google Inc.
  * Copyright (C) 2015 Christopher Friedt <chrisfriedt@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,31 +15,36 @@
  * limitations under the License.
  */
 
-package org.sliderule.runner;
+package examples;
 
-import java.util.*;
+public class Sum extends AOperation {
 
-import org.sliderule.api.*;
-
-class Context {
-
-	final HashSet<SlideRuleAnnotations> bench_classes;
-	ResultProcessor results_processor;
-
-	public Context() {
-		bench_classes = new HashSet<SlideRuleAnnotations>();
-		results_processor = new ConsoleResultProcessor();
+	@Override
+	long iterative( int number ) {
+		checkValidNumber( number );
+		long result = 0;
+		for ( ; number > 0; number-- ) {
+			result += number;
+		}
+		return result;
 	}
 
-	public void addAnnotatedClass( SlideRuleAnnotations ac ) {
-		bench_classes.add( ac );
+	@Override
+	long recursive( int number ) {
+		switch ( checkValidNumber( number ) ) {
+		case 0:
+			return 0;
+		default:
+			return recursive( number - 1 ) + number;
+		}
 	}
 
-	public Set<SlideRuleAnnotations> getAnnotatedClasses() {
-		return bench_classes;
-	}
-
-	public void setResultProcessor( ResultProcessor p ) {
-		results_processor = p;
+	static long tailRecursive( int number, long result ) {
+		switch ( checkValidNumber( number ) ) {
+		case 0:
+			return result;
+		default:
+			return tailRecursive( number - 1, result + number );
+		}
 	}
 }

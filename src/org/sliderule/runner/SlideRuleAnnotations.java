@@ -20,7 +20,8 @@ import java.lang.annotation.*;
 import java.lang.reflect.*;
 import java.util.*;
 
-public class AnnotatedClass {
+@SuppressWarnings({"unchecked","rawtypes"})
+public class SlideRuleAnnotations {
 	private static final int FIELD_PARAM;
 
 	private static final int METHOD_AFTER_EXPERIMENT;
@@ -58,24 +59,53 @@ public class AnnotatedClass {
 	}
 
 	private final Class<?> klass;
-	private final HashSet<Field>[] field_array;
-	private final HashSet<Method>[] method_array;
+	private final TreeSet[] field_array;
+	private final TreeSet[] method_array;
 
-	@SuppressWarnings("unchecked")
-	public AnnotatedClass( Class<?> klass ) {
-		this.klass = klass;
-		field_array = new HashSet[ field_map.size() ];
-		for( int i=0; i < field_array.length; i++ ) {
-			field_array[i] = new HashSet<Field>();
+	static class ClassComparator implements Comparator<Class<?>> {
+		@Override
+		public int compare( Class<?> o1, Class<?> o2 ) {
+			if ( o1 == o2 ) {
+				return 0;
+			}
+			String o1n = o1.getName();
+			String o2n = o2.getName();
+			return o1n.compareTo( o2n );
 		}
-		method_array = new HashSet[ method_map.size() ];
+	}
+
+	static class MemberComparator implements Comparator<Member> {
+		@Override
+		public int compare( Member o1, Member o2 ) {
+			if ( o1 == o2 ) {
+				return 0;
+			}
+			String o1n = o1.getName();
+			String o2n = o2.getName();
+			int r = o1n.compareTo( o2n );
+			return r;
+		}
+	}
+
+	public SlideRuleAnnotations( Class<?> klass ) {
+
+		this.klass = klass;
+
+		field_array = new TreeSet[ field_map.size() ];
+		for( int i=0; i < field_array.length; i++ ) {
+			field_array[i] = new TreeSet<Field>( new MemberComparator() );
+		}
+
+		method_array = new TreeSet[ method_map.size() ];
 		for( int i=0; i < method_array.length; i++ ) {
-			method_array[i] = new HashSet<Method>();
+			method_array[i] = new TreeSet<Method>( new MemberComparator() );
 		}
 
 		ArrayList<Field> fs = new ArrayList<Field>();
-		fs.addAll( Arrays.asList( klass.getFields() ) );
-		fs.addAll( Arrays.asList( klass.getDeclaredFields() ) );
+		for( Class<?> k = klass; k != Object.class; k = k.getSuperclass() ) {
+			fs.addAll( Arrays.asList( k.getFields() ) );
+			fs.addAll( Arrays.asList( k.getDeclaredFields() ) );
+		}
 
 		for( Field f: fs ) {
 			f.setAccessible( true );
@@ -83,8 +113,10 @@ public class AnnotatedClass {
 		}
 
 		ArrayList<Method> ms = new ArrayList<Method>();
-		ms.addAll( Arrays.asList( klass.getMethods() ) );
-		ms.addAll( Arrays.asList( klass.getDeclaredMethods() ) );
+		for( Class<?> k = klass; k != Object.class; k = k.getSuperclass() ) {
+			ms.addAll( Arrays.asList( k.getMethods() ) );
+			ms.addAll( Arrays.asList( k.getDeclaredMethods() ) );
+		}
 
 		for( Method m: ms ) {
 			m.setAccessible( true );
@@ -92,11 +124,6 @@ public class AnnotatedClass {
 		}
 	}
 
-	public Class<?> getAnnotatedClass() {
-		return klass;
-	}
-
-	@SuppressWarnings("unchecked")
 	private <T extends Annotation> void filterMember( Object o ) {
 		List<T> anna;
 		boolean is_field;
@@ -133,7 +160,6 @@ public class AnnotatedClass {
 	}
 
 
-	@SuppressWarnings("unchecked")
 	private static <T extends Annotation> T[] getAnnotations( boolean declared, Object o, Class<T> klass ) {
 		T[] a = null;
 		if ( o instanceof Field ) {
@@ -166,7 +192,11 @@ public class AnnotatedClass {
 		return getAnnotations( true, o, klass );
 	}
 
-	public Set<Field> getParamFields() {
+	public Class<?> getAnnotatedClass() {
+		return klass;
+	}
+
+	public SortedSet<Field> getParamFields() {
 		return field_array[ FIELD_PARAM ];
 	}
 
@@ -187,5 +217,10 @@ public class AnnotatedClass {
 	}
 	public Set<Method> getMacrobenchmarkMethods() {
 		return method_array[ METHOD_MACROBENCHMARK ];
+	}
+
+	@Override
+	public String toString() {
+		return klass.getName() + " with SlideRule Annotations";
 	}
 }

@@ -43,8 +43,8 @@ public abstract class AStatistics implements IStatistics {
 		String r = "";
 		r += "size: " + size() + ", ";
 		r += "mean: " + mean() + ", ";
-		r += "variance: " + variance() + ", ";
-		r += "std_deviation: " + standardDeviation() + ", ";
+//		r += "variance: " + variance() + ", ";
+		r += "std: " + standardDeviation() + ", ";
 		r += "lowest: " + lowest() + ", ";
 		r += "highest: " + highest() + ", ";
 		return r;

@@ -269,26 +269,25 @@ public final class SlideRuleMain {
 		return true;
 	}
 
+	@SuppressWarnings("unchecked")
 	private void setup()
 	throws NonUniformBenchmarkClassesException, ClassNotFoundException, InstantiationException, IllegalAccessException
 	{
-		AnnotatedClass prev_ac = null;
+		SlideRuleAnnotations prev_ac = null;
+
+		if ( arguments.config_properties.containsKey( "results.console.class" ) ) {
+			ClassLoader cl = ClassLoader.getSystemClassLoader();
+			Class<ResultProcessor> crp = (Class<ResultProcessor>) cl.loadClass( arguments.config_properties.getProperty( "results.console.class" ) );
+			ResultProcessor rp = (ResultProcessor) crp.newInstance();
+			context.setResultProcessor( rp );
+		}
 
 		for( Class<?> klass: arguments.bench_classes ) {
 
-			AnnotatedClass ac = new AnnotatedClass( klass );
-
-			if ( arguments.config_properties.containsKey( "results.console.class" ) ) {
-				ClassLoader cl = ClassLoader.getSystemClassLoader();
-				Class<ResultProcessor> crp = (Class<ResultProcessor>) cl.loadClass( arguments.config_properties.getProperty( "results.console.class" ) );
-				ResultProcessor rp = (ResultProcessor) crp.newInstance();
-				context.setResultProcessor( rp );
-			}
-
+			SlideRuleAnnotations ac = new SlideRuleAnnotations( klass );
 			if ( null == prev_ac ) {
 				if ( ! ( ac.getBenchmarkMethods().isEmpty() && ac.getMacrobenchmarkMethods().isEmpty() ) ) {
 					prev_ac = ac;
-					context.addAnnotatedClass( ac );
 				}
 			} else {
 				if ( !(
@@ -303,6 +302,7 @@ public final class SlideRuleMain {
 					throw new NonUniformBenchmarkClassesException();
 				}
 			}
+			context.addAnnotatedClass( ac );
 		}
 	}
 	private void go()

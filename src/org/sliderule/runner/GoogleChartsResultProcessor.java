@@ -18,6 +18,7 @@ package org.sliderule.runner;
 
 import java.io.*;
 import java.lang.reflect.*;
+import java.nio.file.*;
 import java.text.*;
 import java.util.*;
 
@@ -29,8 +30,9 @@ import org.sliderule.stats.*;
  *
  * <p>This class plots the results of benchmarking trials using
  * <a href="https://developers.google.com/chart/">Google Charts API</a>.
- * SlideRule benchmark results are grouped parametrically according to the following
- * guidelines.
+ * SlideRule benchmark results are written to
+ * <a href="http://en.wikipedia.org/wiki/HTML">HTML</a>
+ * files and are grouped according to the following guidelines.
  *
  * <ol>
  *   <li>
@@ -57,6 +59,12 @@ import org.sliderule.stats.*;
  *       identically-named macrobenchmarks selected from each class will appear
  *       on a separate graph.
  *   </li>
+ *   <li>
+ *       If parametric graphs are generated (see below), the swept parameter is
+ *       removed from the set of parameters (thereby generating a smaller set of parameters).
+ *       The remaining parameters in the set are pinned at their base values. Only one variable
+ *       is varied at a time per parametric sweep.
+ *   </li>
  * </ol>
  * </p>
  *
@@ -66,11 +74,11 @@ import org.sliderule.stats.*;
  * <b>-Corg.sliderule.runner.GoogleChartsResultProcessor.plot.histogram=true</b>,
  * this class will not only output graphs for microbenchmarks and macrobenchmarks, but it will also
  * plot the histogram of the collected data with direct comparison to the {@link Normal} distribution
- * it was validated against to.
+ * it was validated against.
  * </p>
  * <p>By setting the config property
  * <b>-Corg.sliderule.runner.GoogleChartsResultProcessor.output.directory=path/to/somewhere</b>,
- * this class will generate output file in the named directory instead of the current working directory.
+ * this class will generate output files in the named directory instead of the current working directory.
  * </p>
  *
  * @author <a href="mailto:chrisfriedt@gmail.com">Christopher Friedt</a>
@@ -78,388 +86,232 @@ import org.sliderule.stats.*;
  */
 public class GoogleChartsResultProcessor extends InMemoryResultProcessor {
 
-	// TODO: document output_directory system property
 	private static final String output_directory_property = GoogleChartsResultProcessor.class.getName() + ".output.directory";
 	static final String output_directory;
 
-	// TODO: document plot_histogram system property
 	private static final String plot_histogram_property = GoogleChartsResultProcessor.class.getName() + ".plot.histogram";
 	static final boolean plot_histogram;
 
-	static class Crunched {
-		Trial proto;
-		IStatistics is;
-		AnnotatedClass clazz;
-		Crunched( Trial proto, IStatistics is ) {
-			this.proto = proto;
-			this.is = is;
-			try {
-				clazz = new AnnotatedClass( ClassLoader.getSystemClassLoader().loadClass( getClassName() ) );
-			} catch ( ClassNotFoundException e ) {
-				throw new IllegalStateException();
-			}
-		}
-		boolean isMicro() {
-			String n = getMethodName();
-			for( Method m: clazz.getBenchmarkMethods() ) {
-				if ( m.getName().equals( n ) ) {
-					return true;
-				}
-			}
-			return false;
-		}
-		String getClassName() {
-			String x = "" + proto;
-			x = x.substring( 0, x.lastIndexOf( '.' ) );
-			return x;
-		}
-		String getMethodName() {
-			String x = "" + proto;
-			x = x.substring( 0, x.indexOf( '(' ) );
-			x = x.substring( x.lastIndexOf( '.' ) + 1 );
-			return x;
-		}
-		String getParameters() {
-			String x = "" + proto;
-			x = x.substring( x.indexOf( '[' ) );
-			return x;
-		}
-		PolymorphicType[][] permute()
-		throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
-		{
-			return Algorithm.permute( clazz.getParamFields().toArray( new Field[ 0 ] ) );
-		}
-		public static String toString( Field[] field, PolymorphicType[] pmt ) {
-			if ( field.length != pmt.length ) {
-				throw new IllegalArgumentException();
-			}
-			String r = "[";
-			for( int i = 0; i < pmt.length; i++ ) {
-				r += field[ i ].getName() + ":" + pmt[ i ];
-				if ( i < pmt.length - 1 ) {
-					r += ",";
-				}
-			}
-			r += "]";
-			return r;
-		}
-		AnnotatedClass getAnnotatedClass() {
-			return clazz;
-		}
-		public IStatistics getStatistics() {
-			return is;
-		}
-	}
-
-	IStatistics getStats( ArrayList<Trial> trials ) {
-		OnlineStatistics os = new OnlineStatistics();
-		for( Trial t: trials ) {
-			for( Measurement m: t.measurements() ) {
-				if ( "elapsed_time_ns".equals( m.description() ) ) {
-					os.update( (double)(Double) m.value().value );
-				}
-			}
-		}
-		return os;
-	}
-
-	private TreeMap<UUID,Crunched> filterByMicro( TreeMap<UUID,Crunched> tmc, boolean micro ) {
-		TreeMap<UUID,Crunched> r = new TreeMap<UUID,Crunched>();
-		for( Map.Entry<UUID,Crunched> e: tmc.entrySet() ) {
-			UUID key = e.getKey();
-			Crunched val = e.getValue();
-			if ( val.isMicro() && micro ) {
-				r.put( key, val );
-			} else if ( !( val.isMicro() || micro ) ) {
-				r.put( key, val );
-			}
-		}
-		return r;
-	}
-
-	private TreeMap<UUID,Crunched> filterByParameters( TreeMap<UUID,Crunched> tmc, String param ) {
-		TreeMap<UUID,Crunched> r = new TreeMap<UUID,Crunched>();
-		for( Map.Entry<UUID,Crunched> e: tmc.entrySet() ) {
-			UUID key = e.getKey();
-			Crunched val = e.getValue();
-			if ( param.equals( val.getParameters() ) ) {
-				r.put( key, val );
-			}
-		}
-		return r;
-	}
-
-	private TreeMap<UUID,Crunched> filterByMethodName( TreeMap<UUID,Crunched> tmc, String method_name ) {
-		TreeMap<UUID,Crunched> r = new TreeMap<UUID,Crunched>();
-		for( Map.Entry<UUID,Crunched> e: tmc.entrySet() ) {
-			UUID key = e.getKey();
-			Crunched val = e.getValue();
-			if ( method_name.equals( val.getMethodName() ) ) {
-				r.put( key, val );
-			}
-		}
-		return r;
-	}
-
-	private Class<?>[] extractClasses( TreeMap<UUID,Crunched> micro, TreeMap<UUID,Crunched> macro ) {
-		ArrayList<Class<?>> classes = new ArrayList<Class<?>>();
-		for( Crunched c: micro.values() ) {
-			Class<?> k = c.getAnnotatedClass().getAnnotatedClass();
-			if ( ! classes.contains( k ) ) {
-				classes.add( k );
-			}
-		}
-		for( Crunched c: macro.values() ) {
-			Class<?> k = c.getAnnotatedClass().getAnnotatedClass();
-			if ( ! classes.contains( k ) ) {
-				classes.add( k );
-			}
-		}
-		return classes.toArray( new Class<?>[0] );
-	}
-
-	private static final String sep = "-";
-	private String genFileName( Crunched c, String param_str ) {
-		SimpleDateFormat fmt = new SimpleDateFormat( "yyyyMMdd" );
-		String date_str = fmt.format( date );
-		String epoch_str = "" + epoch;
-		param_str = param_str.substring( 1, param_str.length() -1 );
-		String r = output_directory + File.separator + "sliderule" + sep + date_str + sep + epoch_str + sep + param_str + ".html";
-		return r;
-	}
-
-	private String[] unpackFileName( String file_name ) {
-		String[] foo = file_name.split( File.separator );
-		file_name = foo[ foo.length - 1 ];
-		file_name = file_name.substring( 0, file_name.length() - ".html".length() );
-		foo = file_name.split( sep );
-		String[] r = file_name.split( sep );
-		return r;
-	}
-
-	private static final String head =
-		"<html>" + "\n" +
-		"  <head>" + "\n" +
-	    "    <script type=\"text/javascript\" src=\"https://www.google.com/jsapi\"></script>" + "\n" +
-	    "    <script type=\"text/javascript\">" + "\n" +
-	    "      google.load(\"visualization\", \"1\", {packages:[\"corechart\"]});" + "\n" +
-	    "      google.setOnLoadCallback(drawVisualization);" + "\n" +
-	    "      function drawVisualization() {" + "\n"
-	;
-	private void composeHead( PrintWriter pw ) {
-		pw.print( head );
-	}
-	private static final String tail[] = {
-		"    }"       + "\n" +
-		"  </script>" + "\n" +
-		"</head>"     + "\n" +
-		"<body>"      + "\n",
-		"</body>"     + "\n" +
-		"</html>"     + "\n",
-	};
-	private void composeTail( PrintWriter pw, String title, String[] param, int n ) {
-		pw.print( tail[ 0 ] );
-
-		pw.println( "  <p><big><b>" + title + "</b></big></p>" );
-		pw.println( "  <p><b>Parameter List:</b><br/>" );
-		pw.println( "  <ul>" );
-		for( int i=0; i<param.length; i++ ) {
-			pw.println( "    <li>" + param[ i ] + "</li>" );
-		}
-		pw.println( "  </ul>" );
-		pw.println( "  </p>" );
-
-		for( int i = 0; i < n; i++ ) {
-			pw.println( "  <div id=\"chart" + i + "\"></div>" );
-		}
-		pw.print( tail[ 1 ] );
-	}
-
-	private final static String[] chart_data_str = {
-		"var data",
-		" = google.visualization.arrayToDataTable([",
-		"]);",
-	};
-	private final static String[] chart_opt_str = {
-		"var options",
-		" = {",
-		"};",
-	};
-	private void doChart( PrintWriter pw, boolean micro, int chart_idx, TreeMap<UUID,Crunched> crunch ) {
-
-		if ( crunch.size() >= 1 ) {
-
-			// order by method name
-			TreeMap<String,Crunched> sorted = new TreeMap<String,Crunched>();
-			for( Crunched c: crunch.values() ) {
-				sorted.put( c.getMethodName(), c );
-			}
-
-			// print chart data
-			pw.println( "      " + chart_data_str[ 0 ]  + chart_idx + chart_data_str[ 1 ] );
-			pw.println( "        " + "[ 'Test', 'Time (ns)' ]," );
-			int i=0;
-			for( Crunched c: sorted.values() ) {
-				pw.print( "        " + "[ '" + c.getMethodName() + "', " + c.getStatistics().mean() + " ]" );
-				if ( i < sorted.size() - 1 ) {
-					pw.print(",");
-				}
-				pw.println();
-			}
-			pw.println( "      " + chart_data_str[ 2 ] );
-
-			// print chart options
-			pw.println( "      " + chart_opt_str[ 0 ] + chart_idx + chart_opt_str[ 1 ] );
-			pw.println( "        " + "title: \"" + (micro ? "Micro-Benchmark" : "Macro-Benchmark") + " Execution Time (ns)\"" );
-			pw.println( "      " + chart_opt_str[ 2 ] );
-
-			// print code to draw chart
-			pw.println( "      " + "var chart" + chart_idx + " = new google.visualization.BarChart(document.getElementById(\"chart" + chart_idx + "\"));" );
-			pw.println( "      " + "var view"  + chart_idx + " = new google.visualization.DataView(data" + chart_idx + ");" );
-			pw.println( "      " + "chart"     + chart_idx + ".draw(view" + chart_idx + ", options" + chart_idx + ");" );
-		}
-	}
-
-	private void doMultiChart( PrintWriter pw, boolean micro, int chart_idx, TreeMap<UUID,Crunched> crunch, String method_name ) {
-
-		if ( crunch.size() >= 1 ) {
-
-			// order by class name
-			TreeMap<String,Crunched> sorted = new TreeMap<String,Crunched>();
-			for( Crunched c: crunch.values() ) {
-				sorted.put( c.getClassName(), c );
-			}
-
-			// print chart data
-			pw.println( "      " + chart_data_str[ 0 ]  + chart_idx + chart_data_str[ 1 ] );
-			pw.println( "        " + "[ 'Class', 'Time (ns)' ]," );
-			int i=0;
-			for( Crunched c: sorted.values() ) {
-				pw.print( "        " + "[ '" + c.getClassName() + "', " + c.getStatistics().mean() + " ]" );
-				if ( i < sorted.size() - 1 ) {
-					pw.print(",");
-				}
-				pw.println();
-			}
-			pw.println( "      " + chart_data_str[ 2 ] );
-
-			// print chart options
-			pw.println( "      " + chart_opt_str[ 0 ] + chart_idx + chart_opt_str[ 1 ] );
-			pw.println( "        " + "title: \"" + (micro ? "Micro-Benchmark" : "Macro-Benchmark") + " Execution Time of " + ( method_name + "()" ) + " (ns)\"" );
-			pw.println( "      " + chart_opt_str[ 2 ] );
-
-			// print code to draw chart
-			pw.println( "      " + "var chart" + chart_idx + " = new google.visualization.BarChart(document.getElementById(\"chart" + chart_idx + "\"));" );
-			pw.println( "      " + "var view"  + chart_idx + " = new google.visualization.DataView(data" + chart_idx + ");" );
-			pw.println( "      " + "chart"     + chart_idx + ".draw(view" + chart_idx + ", options" + chart_idx + ");" );
-		}
-	}
-
-	private String[] extractUniqueMethodNames( TreeMap<UUID,Crunched> crunch ) {
-		ArrayList<String> als = new ArrayList<String>();
-		for( Crunched c: crunch.values() ) {
-			String mn = c.getMethodName();
-			if ( ! als.contains( mn ) ) {
-				als.add( mn );
-			}
-		}
-		return als.toArray( new String[0] );
-	}
-
-	private void composeFile( String file_name, PrintWriter pw, TreeMap<UUID,Crunched> micro, TreeMap<UUID,Crunched> macro ) {
-
-		String[] file_name_unpacked = unpackFileName( file_name );
-		String date = file_name_unpacked[ 1 ];
-		String[] param = file_name_unpacked[ 3 ].split( "," );
-		Arrays.sort( param );
-
-		Class<?>[] classes = extractClasses( micro, macro );
-
-		composeHead( pw );
-
-		boolean multi_class = 1 != classes.length;
-		int chart_idx = 0;
-
-		if ( multi_class ) {
-			String[] unique_method_names;
-			unique_method_names = extractUniqueMethodNames( micro );
-			Arrays.sort( unique_method_names );
-			for( String method_name: unique_method_names ) {
-				doMultiChart( pw, true, chart_idx++, filterByMethodName( micro, method_name ), method_name );
-			}
-			unique_method_names = extractUniqueMethodNames( macro );
-			Arrays.sort( unique_method_names );
-			for( String method_name: unique_method_names ) {
-				doMultiChart( pw, false, chart_idx++, filterByMethodName( macro, method_name ), method_name );
-			}
-		} else {
-			doChart( pw, true, chart_idx++, micro );
-			doChart( pw, false, chart_idx++, macro );
-		}
-
-		if ( plot_histogram ) {
-			System.err.println( "histogram plotting is not yet implemented" );
-		}
-
-		String title = ( multi_class ? "Multi-Class" : classes[0].getName() ) + " Benchmark Results " + date + "<br/>(smaller is better)";
-
-		composeTail( pw, title, param, chart_idx );
-	}
+	private static final String parametric_sweep_property = GoogleChartsResultProcessor.class.getName() + ".plot.parametric.sweep";
+	static final boolean parametric_sweep;
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
 	public void close() throws IOException {
+		main();
+	}
 
-		// this is really the only indication that we have processed all of the trials, so...
-
-		// first, calculate all of the statistics for each experiment
-		TreeMap<UUID,Crunched> tmc = new TreeMap<UUID,Crunched>();
-		for( Map.Entry<UUID,ArrayList<Trial>> e: trial_set.entrySet() ) {
-			IStatistics is = getStats( e.getValue() );
-			tmc.put( e.getKey(), new Crunched( e.getValue().get( 0 ), is ) );
+	private void main()
+	throws IOException
+	{
+		if ( trial_set.isEmpty() ) {
+			return;
 		}
 
-		// second, separate the trials into two groups - micro and macro
-		TreeMap<UUID,Crunched> micro = filterByMicro( tmc , true );
-		TreeMap<UUID,Crunched> macro = filterByMicro( tmc , false );
+		Trial t = trial_set.firstEntry().getValue().get( 0 );
+		if ( ! ( t instanceof SimpleTrial ) ) {
+			return;
+		}
 
-		Crunched c = tmc.firstEntry().getValue();
-		PolymorphicType[][] pmt;
+		SimpleTrial st = (SimpleTrial) t;
+
+		SortedSet<Field> field_set = st.getSlideRuleAnnotations().getParamFields();
+		if ( field_set.isEmpty() ) {
+			return;
+		}
+
+		PolymorphicType[][] pmt = null;
+		Field[] field_array = field_set.toArray( new Field[ 0 ] );
+		List<Field> fields = Arrays.asList( field_array );
 		try {
-			pmt = c.permute();
-		} catch ( Exception e1 ) {
-			throw new IllegalStateException( "unable to permute" );
+			pmt = Algorithm.permute( field_array );
+		} catch ( InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e ) {
+			return;
 		}
+		if ( null == pmt |  pmt.length < 1 ) {
+			return;
+		}
+
+		// create one file containing up to two graphs for each permutation of parameters (one for microbenchmarks, one for macrobenchmarks)
 		for( int row = 0; row < pmt.length; row++ ) {
-			String pmt_str = Crunched.toString( c.getAnnotatedClass().getParamFields().toArray( new Field[ 0 ] ), pmt[ row ] );
 
-			TreeMap<UUID,Crunched> these_micro = filterByParameters( micro, pmt_str );
-			TreeMap<UUID,Crunched> these_macro = filterByParameters( macro, pmt_str );
+			List<PolymorphicType> lpmt = Arrays.asList( pmt[ row ] );
+			TreeMap<UUID, ArrayList<Trial>> subset = filterByParamValue( trial_set, fields, lpmt );
 
-			String fn = genFileName( c, pmt_str );
-			File f = new File( fn );
-			f.mkdirs();
-			if ( f.exists() ) {
-				f.delete();
+			if ( ! subset.isEmpty() ) {
+				File file = genFile( subset );
+				SlideRuleGoogleChartsWriter gcw = new SlideRuleGoogleChartsWriter( date, new FileOutputStream( file ), subset );
+				gcw.write();
+				gcw.close();
 			}
-			PrintWriter pw = new PrintWriter( new FileOutputStream( f ) );
-			composeFile( fn, pw, these_micro, these_macro );
-			pw.close();
+		}
+
+		if ( parametric_sweep ) {
+			// create one file containing up to two graphs (one for microbenchmarks, one for macrobenchmarks) for each parameter
+			// but only if there is more then one value for that parameter
+			for( int col = 0; col < field_array.length; col++ ) {
+
+				TreeSet<PolymorphicType> unique_values = new TreeSet<PolymorphicType>();
+
+				for( int row = 0; row < pmt.length; row++ ) {
+					unique_values.add( pmt[ row ][ col ] );
+				}
+
+				if ( unique_values.size() > 1 ) {
+
+					PolymorphicType[] base_case = new PolymorphicType[ pmt[ 0 ].length ];
+					System.arraycopy( pmt[ 0 ], 0, base_case, 0, base_case.length );
+
+					TreeMap<UUID, ArrayList<Trial>> subset = new TreeMap<UUID, ArrayList<Trial>>();
+
+					for( PolymorphicType v: unique_values ) {
+						base_case[ col ] = v;
+						List<PolymorphicType> values = Arrays.asList( base_case );
+						TreeMap<UUID, ArrayList<Trial>> q = filterByParamValue( trial_set, fields, values );
+						subset.putAll( q );
+					}
+
+					File file = genFile( subset );
+					SlideRuleGoogleChartsWriter gcw = new SlideRuleGoogleChartsWriter( date, new FileOutputStream( file ), subset );
+					gcw.write();
+					gcw.close();
+				}
+			}
 		}
 	}
 
-	Date date = new Date();
-	long epoch = System.currentTimeMillis();
+	private String genFileName( String tag ) {
+		final String sliderule = "sliderule";
+		final String sep = "-";
+		final String dothtml = ".html";
+		String r = output_directory + File.separator + sliderule + sep + date + sep + epoch + sep + tag + dothtml;
+		return r;
+	}
+
+	static boolean trialsAreParametricSweep( TreeMap<UUID,ArrayList<Trial>> trials ) {
+		return -1 != parametricSweepIndex( trials );
+	}
+
+	@SuppressWarnings("unchecked")
+	static int parametricSweepIndex( TreeMap<UUID, ArrayList<Trial>> trials ) {
+
+		// for this to be the case, only one parameter may be changed throughout all of the
+		// trials recorded for an experiment
+
+		int r = -1;
+
+		Trial t;
+		SimpleTrial st;
+		PolymorphicType[] pmt;
+
+		t = trials.firstEntry().getValue().get( 0 );
+		if ( ! ( t instanceof SimpleTrial ) ) {
+			throw new IllegalStateException();
+		}
+		st = (SimpleTrial) t;
+
+		HashSet<PolymorphicType>[] fields_varied = new HashSet[ st.getParamValue().length ];
+		for( int i = 0; i < fields_varied.length; i++ ) {
+			fields_varied[ i ] = new HashSet<PolymorphicType>();
+		}
+
+		for( ArrayList<Trial> alt: trials.values() ) {
+			t = alt.get( 0 );
+			if ( ! ( t instanceof SimpleTrial ) ) {
+				throw new IllegalStateException();
+			}
+			st = (SimpleTrial) t;
+			pmt = st.getParamValue();
+			for( int i = 0; i < pmt.length; i++ ) {
+				fields_varied[ i ].add( pmt[ i ] );
+			}
+		}
+
+		int idx = -1;
+		int n_fields_with_more_than_one_value = 0;
+		for( int i = 0; i < fields_varied.length; i++ ) {
+			if ( fields_varied[ i ].size() > 1 && -1 == idx ) {
+				idx = i;
+			}
+			n_fields_with_more_than_one_value += fields_varied[ i ].size() > 1 ? 1 : 0;
+		}
+
+		if ( 1 == n_fields_with_more_than_one_value ) {
+			r = idx;
+		}
+
+		return r;
+	}
+
+	@SuppressWarnings("unchecked")
+	static <T extends Object> T[] extractOneFromArray( T[] array, int index_to_extract ) {
+		T[] r = (T[]) Array.newInstance( array[ 0 ].getClass(), array.length - 1 );
+		for( int i = 0, j = 0; i < array.length; i++, j += ( j == index_to_extract ) ? 0 : 1 ) {
+			if ( !( i == index_to_extract ) ) {
+				r[ j ] = array[ i ];
+			}
+		}
+		return r;
+	}
+
+	private File genFile( TreeMap<UUID, ArrayList<Trial>> trials ) throws IOException {
+
+		// Parameters will either all be the same or not.
+		// If they are not the same, then we're performing
+		// a parametric sweep and should tag it "sweep-<field>".
+		// If all of the parameters are the same then we should
+		// call tag it "<param:val><param:val>..."
+
+		SimpleTrial st;
+
+		Trial t = trials.firstEntry().getValue().get( 0 );
+		if ( ! ( t instanceof SimpleTrial ) ) {
+			throw new IllegalStateException();
+		}
+		st = (SimpleTrial) t;
+
+		Field[] field = st.getParam();
+
+		boolean sweep = trialsAreParametricSweep( trials );
+		String tag = "";
+
+		if ( sweep ) {
+			int delta = parametricSweepIndex( trials );
+			if ( -1 == delta ) {
+				throw new IllegalStateException();
+			}
+			tag = "sweep:" + field[ delta ].getName();
+		} else {
+			tag = PolymorphicType.nameParams( field, st.getParamValue() );
+			tag = tag.replace( "[", "" );
+			tag = tag.replace( "]", "" );
+		}
+
+		String file_name = genFileName( tag );
+		File file = new File( file_name );
+		if ( file.isDirectory() ) {
+			throw new IOException( "file '" + file_name + "' exists and is a directory." );
+		}
+		file.mkdirs();
+		file.delete();
+
+		return file;
+	}
+
+	final String date = new SimpleDateFormat( "yyyyMMdd" ).format( new Date() );
+	final long epoch = System.currentTimeMillis();
 
 	static {
 		String s;
 		boolean b;
-		s = Arguments.static_config_properties.getProperty( "org.sliderule.runner.GoogleChartsResultProcessor.output.directory" );
-		output_directory = null == s ? new File( "." ).getAbsolutePath() : s;
-		s = Arguments.static_config_properties.getProperty( "org.sliderule.runner.GoogleChartsResultProcessor.plot.histogram" );
+		s = Arguments.static_config_properties.getProperty( output_directory_property );
+		output_directory = null == s ? Paths.get( "" ).toAbsolutePath().toString() : s;
+		s = Arguments.static_config_properties.getProperty( plot_histogram_property );
 		b = Boolean.parseBoolean( s );
 		plot_histogram = b;
+		s = Arguments.static_config_properties.getProperty( parametric_sweep_property );
+		parametric_sweep = true;
 	}
 }

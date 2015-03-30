@@ -17,9 +17,8 @@
 package org.sliderule.model;
 
 import java.lang.reflect.*;
-import java.util.*;
 
-public final class PolymorphicType {
+public final class PolymorphicType implements Comparable<PolymorphicType> {
 
 	public final Class<?> klass;
 	public final Object value;
@@ -79,8 +78,100 @@ public final class PolymorphicType {
 		return pmt;
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
+	public int compareTo( PolymorphicType o ) {
+		Class<?> klass = this.klass;
+		if ( null == o ) {
+			return -1;
+		}
+		if ( o.klass == klass ) {
+			if ( klass.isPrimitive() ) {
+				if ( byte.class == klass ) {
+					klass = Byte.class;
+				} else if ( short.class == klass ) {
+					klass = Short.class;
+				} else if ( int.class == klass ) {
+					klass = Integer.class;
+				} else if ( long.class == klass ) {
+					klass = Long.class;
+				} else if ( float.class == klass ) {
+					klass = Float.class;
+				} else if ( double.class == klass ) {
+					klass = Double.class;
+				}
+			}
+			if ( Number.class.isAssignableFrom( klass ) ) {
+				if ( value == null && o.value == null ) {
+					return 0;
+				}
+				if ( o.value == null ) {
+					return -1;
+				}
+				if ( value == null ) {
+					return 1;
+				}
+				if ( Byte.class == klass ) {
+					return Byte.compare( (byte)value, (byte)o.value );
+				} else if ( Short.class == klass ) {
+					return Short.compare( (short)value, (short)o.value );
+				} else if ( Integer.class == klass ) {
+					return Integer.compare( (int)value, (int)o.value );
+				} else if ( Long.class == klass ) {
+					return Long.compare( (long)value, (long)o.value );
+				} else if ( Float.class == klass ) {
+					return Float.compare( (float)value, (float)o.value );
+				} else if ( Double.class == klass ) {
+					return Double.compare( (double)value, (double)o.value );
+				} else {
+					throw new IllegalStateException();
+				}
+			} else if ( Comparable.class.isAssignableFrom( klass ) ) {
+				Comparable c = (Comparable) value;
+				return c.compareTo( o.value );
+			}
+		}
+		// in the case that classes are not equal or do not implement Comparable
+		if ( o.klass.hashCode() < klass.hashCode() ) {
+			return -1;
+		} else if ( o.klass.hashCode() > klass.hashCode() ) {
+			return 1;
+		} else {
+			if ( o.klass == klass ) {
+				return 0;
+			} else {
+				throw new IllegalStateException();
+			}
+		}
+	}
+
+	@Override
+	public boolean equals( Object o ) {
+		if ( null == o || PolymorphicType.class != o.getClass() ) {
+			return false;
+		}
+		PolymorphicType pmt = (PolymorphicType) o;
+		return 0 == compareTo( pmt );
+	}
+
 	@Override
 	public String toString() {
-		return "" + klass + ":" + ( null == value ? "(null)" : "" + value );
+		return "" + klass.getName() + ":" + ( null == value ? "(null)" : "" + value );
+	}
+
+	public static String nameParams( Field[] param, PolymorphicType[] param_value ) {
+		String r = "[";
+		if ( !( null == param || 0 == param.length ) ) {
+			for( int i=0; i<param.length; i++ ) {
+				r += param[ i ].getName();
+				r += ":";
+				r += param_value[ i ];
+				if ( i < param.length - 1 ) {
+					r += ",";
+				}
+			}
+		}
+		r += "]";
+		return r;
 	}
 }

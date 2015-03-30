@@ -1,4 +1,5 @@
 /*
+ * Copyright (C) 2013 Google Inc.
  * Copyright (C) 2015 Christopher Friedt <chrisfriedt@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,31 +15,10 @@
  * limitations under the License.
  */
 
-package org.sliderule.runner;
+package examples;
 
-import java.util.*;
-
-import org.sliderule.api.*;
-
-class Context {
-
-	final HashSet<SlideRuleAnnotations> bench_classes;
-	ResultProcessor results_processor;
-
-	public Context() {
-		bench_classes = new HashSet<SlideRuleAnnotations>();
-		results_processor = new ConsoleResultProcessor();
-	}
-
-	public void addAnnotatedClass( SlideRuleAnnotations ac ) {
-		bench_classes.add( ac );
-	}
-
-	public Set<SlideRuleAnnotations> getAnnotatedClasses() {
-		return bench_classes;
-	}
-
-	public void setResultProcessor( ResultProcessor p ) {
-		results_processor = p;
+public final class SumBenchmark extends ABenchmark {
+	public SumBenchmark() {
+		super( new Sum() );
 	}
 }
