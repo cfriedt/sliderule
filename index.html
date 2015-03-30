@@ -125,7 +125,17 @@ Options:
 <h3>
 <a id="example" class="anchor" href="#example" aria-hidden="true"><span class="octicon octicon-link"></span></a>Example</h3>
 
-<p>Please see the <a href="https://github.com/cfriedt/sliderule/blob/master/example/examples/FactorialBenchmark.java">FactorialBenchmark</a> for an example on creating a simple benchmark class. As SlideRule is mostly API-compatible with Caliper, users are encouraged to view <a href="https://code.google.com/p/caliper/">Caliper</a> documentation as well and to report any undocumented inconsistencies as <a href="https://github.com/cfriedt/sliderule/issues">Issues</a>.</p>
+<p>
+Please see the <a href="https://github.com/cfriedt/sliderule/blob/master/example/examples/FactorialBenchmark.java">FactorialBenchmark</a> for an example on creating a simple benchmark class. As SlideRule is mostly API-compatible with Caliper, users are encouraged to view <a href="https://code.google.com/p/caliper/">Caliper</a> documentation as well and to report any undocumented inconsistencies as <a href="https://github.com/cfriedt/sliderule/issues">Issues</a>.
+</p>
+<p>
+<b><i>New:</b></i> Display your benchmarks using <a href="https://developers.google.com/chart/">Google Charts</a>!
+<div class="highlight highlight-shell">
+<pre>
+<span class="pl-s">java -cp .:sliderule.jar org.sliderule.runner.SlideRuleMain -Cresults.console.class=org.sliderule.runner.GoogleChartsResultProcessor examples.FactorialBenchmark examples.SumBenchmark</span>
+</pre>
+</div>
+</p>
 
 <p>Feel free to also benchmark Caliper's <a href="https://code.google.com/p/caliper/source/browse/#git%2Fexamples%2Fsrc%2Fmain%2Fjava%2Fexamples">examples</a>.</p>
 
