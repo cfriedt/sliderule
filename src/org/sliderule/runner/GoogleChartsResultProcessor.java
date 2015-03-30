@@ -232,7 +232,7 @@ public class GoogleChartsResultProcessor extends InMemoryResultProcessor {
 		int idx = -1;
 		int n_fields_with_more_than_one_value = 0;
 		for( int i = 0; i < fields_varied.length; i++ ) {
-			if ( fields_varied[ i ].size() > 1 && -1 == idx -1 ) {
+			if ( fields_varied[ i ].size() > 1 && -1 == idx ) {
 				idx = i;
 			}
 			n_fields_with_more_than_one_value += fields_varied[ i ].size() > 1 ? 1 : 0;
@@ -242,6 +242,17 @@ public class GoogleChartsResultProcessor extends InMemoryResultProcessor {
 			r = idx;
 		}
 
+		return r;
+	}
+
+	@SuppressWarnings("unchecked")
+	static <T extends Object> T[] extractOneFromArray( T[] array, int index_to_extract ) {
+		T[] r = (T[]) Array.newInstance( array[ 0 ].getClass(), array.length - 1 );
+		for( int i = 0, j = 0; i < array.length; i++, j += ( j == index_to_extract ) ? 0 : 1 ) {
+			if ( !( i == index_to_extract ) ) {
+				r[ j ] = array[ i ];
+			}
+		}
 		return r;
 	}
 

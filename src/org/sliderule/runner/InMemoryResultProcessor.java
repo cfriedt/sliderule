@@ -168,11 +168,9 @@ public class InMemoryResultProcessor implements ResultProcessor {
 	}
 	public static TreeMap<UUID,ArrayList<Trial>> filterByMethod( TreeMap<UUID,ArrayList<Trial>> trial_set, Set<Method> methods  ) {
 		TreeMap<UUID,ArrayList<Trial>> r = new TreeMap<UUID,ArrayList<Trial>>();
-		for( Map.Entry<UUID,ArrayList<Trial>> e: trial_set.entrySet() ) {
-			for( Method method: methods ) {
-				TreeMap<UUID,ArrayList<Trial>> more = filterByMethod( trial_set, method );
-				r.putAll( more );
-			}
+		for( Method method: methods ) {
+			TreeMap<UUID,ArrayList<Trial>> more = filterByMethod( trial_set, method );
+			r.putAll( more );
 		}
 		return r;
 	}
@@ -255,6 +253,30 @@ public class InMemoryResultProcessor implements ResultProcessor {
 		}
 		return r;
 	}
+	public static TreeMap<UUID,ArrayList<Trial>> filterByParamValue( TreeMap<UUID,ArrayList<Trial>> trial_set, Field field, PolymorphicType value ) {
+
+		TreeMap<UUID,ArrayList<Trial>> r = new TreeMap<UUID,ArrayList<Trial>>();
+
+		for( Map.Entry<UUID,ArrayList<Trial>> e: trial_set.entrySet() ) {
+
+			UUID key = e.getKey();
+			ArrayList<Trial> val = e.getValue();
+
+			SimpleTrial st = (SimpleTrial) val.get( 0 );
+			Field[] f = st.getParam();
+			PolymorphicType[] pmt = st.getParamValue();
+
+			for( int i = 0; i < pmt.length; i++ ) {
+				if ( ! f[ i ].equals( field ) ) {
+					continue;
+				}
+				if ( pmt[ i ].equals( value ) ) {
+					r.put( key, val );
+				}
+			}
+		}
+		return r;
+	}
 	public static TreeMap<UUID,ArrayList<Trial>> filterByParamValue( TreeMap<UUID,ArrayList<Trial>> trial_set, List<Field> fields, List<PolymorphicType> values ) {
 
 		if ( fields.size() != values.size() ) {
@@ -282,6 +304,8 @@ public class InMemoryResultProcessor implements ResultProcessor {
 			if ( ! fields_match ) {
 				continue;
 			}
+
+
 
 			boolean values_match = true;
 			for( int i = 0; i < fields.size(); i++ ) {
