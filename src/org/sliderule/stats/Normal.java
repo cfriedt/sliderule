@@ -92,6 +92,7 @@ public final class Normal {
 		r = negative ? -xrow[ i ] : xrow[ i ];
 		return r;
 	}
+	/*
 	public static double pdf( double x, double u, double o ) {
 		return 1D / ( o * Math.sqrt( 2D * Math.PI ) ) * Math.exp( -0.5D * Math.pow( ( x - u ) / o , 2D ) );
 	}
@@ -109,5 +110,15 @@ public final class Normal {
 			xpdf[ i ] = z;
 		}
 		return xpdf;
+	}
+	*/
+	public static Histogram histogram( int size, double u, double o ) {
+		double[] data = new double[ 1 << 10 ];
+		for( int i = 0; i < data.length; i++ ) {
+			data[ i ] = BoxMuller.random( u, o );
+		}
+		OfflineStatistics os = new OfflineStatistics( data );
+		Histogram hist = new Histogram( size, os );
+		return hist;
 	}
 }

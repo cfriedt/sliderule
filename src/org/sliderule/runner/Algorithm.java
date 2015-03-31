@@ -388,11 +388,9 @@ public class Algorithm {
 			sz = AStatistics.MIN_N_BEFORE_VALID_VARIANCE + 1;
 		}
 		Histogram observed_hist = new Histogram( sz, observed_stats );
-		OfflineStatistics normal_stats = new OfflineStatistics( Normal.pdf( observed_stats.size(), observed_stats.mean(), observed_stats.standardDeviation() ) );
-		Histogram normal_hist = new Histogram( observed_hist.size(), normal_stats );
+		Histogram normal_hist = Normal.histogram( observed_hist.size(), observed_stats.mean(), observed_stats.standardDeviation() );
 
-		final boolean normalize = true;
-		boolean r = ChiSquared.test( P_CONFIDENCE, normalize, normal_hist, observed_hist, observed_hist.meanBin() );
+		boolean r = ChiSquared.test( P_CONFIDENCE, normal_hist, observed_hist );
 
 		if ( r ) {
 			D( "statistical model validated: " + observed_stats );

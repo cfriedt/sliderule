@@ -16,6 +16,8 @@
 
 package org.sliderule.stats;
 
+import java.util.*;
+
 /**
  * <p><b>&Chi;&sup2; Distribution</b></p>
  *
@@ -247,61 +249,62 @@ public final class ChiSquared {
 	 * @param prototype a reference distribution of the random variable {@code X}
 	 * @param hypothesis data sampled from the random variable {@code X}
 	 * @param p the confidence level the test must satisfy. 0 < p < 1
-	 * @param offset ignore the first {@code offset} bins of the hypothesis
 	 * @return true if the null hypothesis is invalid - i.e. if {@code prototype} is a good fit for {@code h}
 	 */
-	public static boolean test( double p, boolean normalize, Histogram prototype, Histogram hypothesis, int offset ) {
-		if ( null == prototype || null == hypothesis || prototype.size() != hypothesis.size() ) {
-			throw new IllegalArgumentException();
+	public static boolean test( double p, Histogram prototype, Histogram hypothesis ) {
+
+		double bin_width = hypothesis.binWidth();
+		double[] centers = hypothesis.binCenters();
+
+		double[] hypothesis_data = hypothesis.data();
+		double[] prototype_data = new double[ hypothesis_data.length ];
+		for( int i = 0; i < hypothesis_data.length; i++ ) {
+			double x1 = centers[ i ] - bin_width / 2;
+			double x2 = centers[ i ] + bin_width / 2;
+			prototype_data[ i ] = prototype.count( x1, x2 );
 		}
-		if ( 0 == prototype.size() ) {
-			return false;
-		}
-		int skipped = 0;
+
 		double sum = 0;
-		double[] proto_data;
-		double[] hypothesis_data;
-		if ( normalize ) {
-			proto_data = prototype.normalizedData();
-			hypothesis_data = hypothesis.normalizedData();
-		} else {
-			proto_data = prototype.data();
-			hypothesis_data = prototype.data();
+		for( int i = 0; i < hypothesis_data.length; sum += hypothesis_data[ i ], i++ );
+		if ( 0 == sum ) {
+			throw new NoSuchElementException();
 		}
-		for( int i=0; i < proto_data.length - offset; i++ ) {
-			double num = Math.pow( Math.abs( hypothesis_data[ i + offset ] - proto_data[ i ] ), 2 );
-			// Chi-Squared becomes unusable if one of proto_data ( a.k.a. 'Ei' ) is 0
-			// The solution is that we just skip those values and compute with the
-			// remaining non-zero samples, subtracting 1 from the degrees of freedom.
-			if ( 0.0 == proto_data[ i ] ) {
-				skipped++;
+		for( int i = 0; i < hypothesis_data.length; hypothesis_data[ i ] /= sum, i++ );
+
+		sum = 0;
+		for( int i = 0; i < prototype_data.length; sum += prototype_data[ i ], i++ );
+		if ( 0 == sum ) {
+			throw new NoSuchElementException();
+		}
+		for( int i = 0; i < prototype_data.length; prototype_data[ i ] /= sum, i++ );
+
+		int valid_samples = 0;
+		sum = 0;
+		for( int i = 0; i < prototype_data.length; i++ ) {
+			if ( 0 == prototype_data[ i ] ) {
+				// For prototype distributions that contain zero-values, Chi-Squared becomes unstable
+				// because the prototype element, being in the denominator, forces the quotient positive infinity.
+				// For zero values in the prototype distribution, the solution is one of following two options:
+				// a) if the prototype is zero-valued and the observed is zero-valued, increment the sum by zero, counting the sample as valid (i.e. degrees of freedom is unchanged)
+				// b) if the prototype is zero-valued and the observed is not zero-valued, increment the sum by zero, discounting the sample as valid (i.e. one fewer degrees of freedom)
+				if ( 0 == hypothesis_data[ i ] ) {
+					valid_samples++;
+				}
 				continue;
 			}
-			double den = proto_data[ i ];
-			double quotient = num / den;
-			sum +=  quotient;
+			valid_samples++;
+			double numerator = Math.pow( ( hypothesis_data[ i ] - prototype_data[ i ] ), 2 );
+			double denominator = prototype_data[ i ];
+			double quotient = numerator / denominator;
+			sum += quotient;
 		}
+
 		double x;
 		try {
-			x = inv( proto_data.length - offset - skipped - 1, p );
+			x = inv( valid_samples - 1, p );
 		} catch( IllegalArgumentException e ) {
 			return false;
 		}
 		return sum <= x;
-	}
-
-	/**
-	 * Perform a &Chi;&sup2; test to determine if the sampled values,
-	 * {@code h}, are a good fit for the prototypical distribution,
-	 * {@code proto}.
-	 * The <a href="http://en.wikipedia.org/wiki/Null_hypothesis">null hypothesis</a>
-	 * is that the distribution is not a good fit.
-	 * @param prototype a reference distribution of the random variable {@code X}
-	 * @param hypothesis data sampled from the random variable {@code X}
-	 * @param p the confidence level the test must satisfy. 0 < p < 1
-	 * @return true if the null hypothesis is invalid - i.e. if {@code prototype} is a good fit for {@code h}
-	 */
-	public static boolean test( double p, boolean normalize, Histogram prototype, Histogram hypothesis ) {
-		return test( p, normalize, prototype, hypothesis, 0 );
 	}
 }

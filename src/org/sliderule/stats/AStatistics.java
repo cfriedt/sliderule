@@ -46,7 +46,7 @@ public abstract class AStatistics implements IStatistics {
 //		r += "variance: " + variance() + ", ";
 		r += "std: " + standardDeviation() + ", ";
 		r += "lowest: " + lowest() + ", ";
-		r += "highest: " + highest() + ", ";
+		r += "highest: " + highest();
 		return r;
 	}
 }

@@ -26,7 +26,6 @@ import java.util.*;
  *   <ul>
  *     <li>Wikipedia: <a href="http://en.wikipedia.org/wiki/Histogram">Histogram</a></li>
  *     <li>DeGroot, Morris H., and Schervish, Mark J. Probability and Statistics, 3rd Ed. Toronto: Addison-Wesley, 2002. pp. 776-778. Print.</li>
- *     <li>Wikipedia: <a href="http://en.wikipedia.org/wiki/Histogram#Number_of_bins_and_width">Scott's normal reference rule</a></li>
  *   </ul>
  */
 public final class Histogram {
@@ -114,12 +113,13 @@ public final class Histogram {
 
 	/**
 	 * Determine an optimum number of partitions such that the {@link #binWidth() bin width}
-	 * is optimal for a set of data.
+	 * is minimizes the mean-square error of the density estimate.
 	 * @param n number of samples in the data set
 	 * @param o sample standard deviation of the data set
 	 * @param lowest the lowest datum measured in the data set
 	 * @param highest the highest datum measured in the data set
 	 * @return the number of partitions
+	 * @see Wikipedia: <a href="http://en.wikipedia.org/wiki/Histogram#Number_of_bins_and_width">Scott's normal reference rule</a>
 	 * @see {@link #partition(double[])}
 	 * @see {@link #partition(IStatistics)}
 	 */
@@ -130,11 +130,13 @@ public final class Histogram {
 		if ( highest < lowest ) {
 			throw new IllegalArgumentException();
 		}
-		return (int) ( Math.ceil( highest - lowest ) / binWidth( n, o ) );
+		int scotts = (int) ( Math.ceil( highest - lowest ) / binWidth( n, o ) );
+		int sqrt = (int) Math.round( Math.sqrt( n ) );
+		return Math.min( scotts, sqrt );
 	}
 	/**
 	 * Determine an optimum number of partitions such that the {@link #binWidth() bin width}
-	 * is optimal for a set of data.
+	 * is minimizes the mean-square error of the density estimate.
 	 * @param is the {@link IStatistics} representing the data set in question
 	 * @return the number of partitions
 	 * @see {@link #partition(int, double, double, double)}
@@ -200,22 +202,29 @@ public final class Histogram {
 	public int size() {
 		return data.length;
 	}
-	public int bin( double x ) {
-		for( int i = 0; i < bin_centers.length; i++ ) {
-			double L = bin_centers[ i ] - bin_width;
-			double U = bin_centers[ i ] + bin_width;
-			if ( x >= L && x <= U ) {
-				return i;
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String toString() {
+		return "bins: " + size() + ", " + is;
+	}
+
+	/**
+	 * Count the number of raw samples that fall into the given range.
+	 * @param x1 lower boundary of range
+	 * @param x2 upper boundary of range
+	 * @return the number of samples x, such that x1 <= x <= x2
+	 */
+	public int count( double x1, double x2 ) {
+		int r = 0;
+		double[] data = is.data();
+		for( int i = 0; i < data.length; i++ ) {
+			if ( data[ i ] >= x1 && data[ i ] <= x2 ) {
+				r++;
 			}
 		}
-		throw new NoSuchElementException();
-	}
-	/**
-	 * Return the bin number containing the arithmetic mean of the backing data set.
-	 * @return the bin number
-	 * @throws NoSuchElementException if the value x is not found within the bounds of any bin.
-	 */
-	public int meanBin() {
-		return bin( is.mean() );
+		return r;
 	}
 }
