@@ -109,6 +109,7 @@ public class OnlineStatistics extends AStatistics {
 			if ( variance < 0 ) {
 				throw new IllegalStateException();
 			}
+			data.add( x );
 		}
 	}
 
