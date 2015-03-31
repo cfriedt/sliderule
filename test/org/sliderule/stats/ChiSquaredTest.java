@@ -112,9 +112,8 @@ public class ChiSquaredTest {
  			expected[ i ] = proto[ i ] * N;
 		}
 		boolean expected_pass = false;
-		final boolean do_not_normalize = false;
 		// set the length manually here, as the size of the histogram can be small
-		boolean actual_pass = ChiSquared.test( 0.95, do_not_normalize, new Histogram( proto.length, expected ), new Histogram( observed.length, observed ) );
+		boolean actual_pass = ChiSquared.test( 0.95, new Histogram( proto.length, expected ), new Histogram( observed.length, observed ) );
 		assertEquals( "expected the test to " + ( expected_pass ? "pass" : "fail"), expected_pass, actual_pass );
 	}
 	@Test
@@ -130,9 +129,8 @@ public class ChiSquaredTest {
  			expected[ i ] = proto[ i ] * N;
 		}
 		boolean expected_pass = true;
-		final boolean normalize = true;
 		// set the length manually here, as the size of the histogram can be small
-		boolean actual_pass = ChiSquared.test( 0.95, normalize, new Histogram( proto.length, expected ), new Histogram( observed.length, observed ) );
+		boolean actual_pass = ChiSquared.test( 0.95, new Histogram( proto.length, expected ), new Histogram( observed.length, observed ) );
 		assertEquals( "expected the test to " + ( expected_pass ? "pass" : "fail"), expected_pass, actual_pass );
 	}
 	@Test
@@ -148,10 +146,8 @@ public class ChiSquaredTest {
  			expected[ i ] = proto[ i ] * N;
 		}
 		boolean expected_pass = true;
-		final boolean normalize = true;
-		final int shift = 1;
 		// set the length manually here, as the size of the histogram can be small
-		boolean actual_pass = ChiSquared.test( 0.95, normalize, new Histogram( proto.length, expected ), new Histogram( observed.length, observed ), shift );
+		boolean actual_pass = ChiSquared.test( 0.95, new Histogram( proto.length, expected ), new Histogram( observed.length, observed ) );
 		assertEquals( "expected the test to " + ( expected_pass ? "pass" : "fail"), expected_pass, actual_pass );
 	}
 }
