@@ -570,6 +570,12 @@ public class Algorithm {
 					}
 				} catch( SkipThisScenarioException e ) {
 					continue;
+				} catch( InvocationTargetException e ) {
+					Throwable t = e.getCause();
+					if ( t instanceof SkipThisScenarioException ) {
+						continue;
+					}
+					throw e;
 				}
 			}
 			D( "finished all parameter permutations. moving on to next class" );
