@@ -307,7 +307,7 @@ class GoogleChartsWriter {
 		pw.println( "      var options" + chart_idx + " = {" );
 		pw.println( "        chart: {" );
 		pw.println( "          title: '" + classes.first().getName() + " " + ( micro ? "Micro" : "Macro" ) + "-Benchmark, " + date + "'," );
-		pw.println( "          subtitle: 'Parameters: " + PolymorphicType.nameParams( base_name, base_case ) + "'" );
+		pw.println( "          subtitle: 'Parameters: " + base_name[0].getName() + ":" + base_case[0] + "'" );
 		pw.println( "        }," );
 		pw.println( "        bars: 'horizontal' // Required for Material Bar Charts." );
 		pw.println( "      };" );
