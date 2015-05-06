@@ -422,7 +422,7 @@ public class Algorithm {
 
 		D( "entering trials loop at " + System.currentTimeMillis() );
 
-		D( "MIN_TRIALS for " + P_CONFIDENCE + " confidence and " + Q_ACCEPTANCE + "std.dev acceptance is " + MIN_TRIALS );
+		D( "MIN_TRIALS for " + P_CONFIDENCE + " confidence and " + Q_ACCEPTANCE + " std.dev acceptance is " + MIN_TRIALS );
 		D( "MAX_TRIALS is " + MAX_TRIALS );
 
 		// proceed until the result of the trials is statistically significant
@@ -439,7 +439,7 @@ public class Algorithm {
 
 			trial_start_ms = System.currentTimeMillis();
 			D2( "starting trial at " + trial_start_ms );
-			trial_stop_ms = arguments.time_limit >= 0 ? ( trial_start_ms + 1000 * arguments.time_limit ): 0;
+			trial_stop_ms = arguments.time_limit > 0 ? ( trial_start_ms + 1000 * arguments.time_limit ): 0;
 			if ( 0 != trial_stop_ms ) {
 				D2( "trial must finish by " + trial_stop_ms );
 			}
