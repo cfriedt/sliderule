@@ -306,12 +306,14 @@ public class GoogleChartsResultProcessor extends InMemoryResultProcessor {
 	static {
 		String s;
 		boolean b;
-		s = Arguments.static_config_properties.getProperty( output_directory_property );
+		// XXX: arguments.static_config_properties. does not seem to work
+		// arguments.static_config_properties.
+		s = System.getProperty( output_directory_property );
 		output_directory = null == s ? Paths.get( "" ).toAbsolutePath().toString() : s;
-		s = Arguments.static_config_properties.getProperty( plot_histogram_property );
+		s = System.getProperty( plot_histogram_property );
 		b = Boolean.parseBoolean( s );
 		plot_histogram = b;
-		s = Arguments.static_config_properties.getProperty( parametric_sweep_property );
+		s = System.getProperty( parametric_sweep_property );
 		parametric_sweep = true;
 	}
 }

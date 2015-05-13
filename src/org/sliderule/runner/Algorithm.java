@@ -282,7 +282,9 @@ public class Algorithm {
 		// populate reps with orders of magnitude
 		for( int i = 0, j = 1; i < reps.length; reps[ i ] = j, i++, j *= 10 );
 
-		D( "warming up method " + m + " with " + N_WARMUP_REPS + " calls" );
+		String m_name = "" + m;
+		String[] m_name_split = m_name.split( " throws" );
+		D( "warming up method " + m_name_split[ 0 ] + " with " + N_WARMUP_REPS + " calls" );
 		dummy = m.invoke( o, N_WARMUP_REPS );
 
 		for( int i = 0; i < reps.length; i++ ) {
@@ -315,6 +317,8 @@ public class Algorithm {
 
 			if ( elapsed_ns >= SAFE_NS_FOR_STABLE_REPS ) {
 				D( "stability time limit exceeded");
+				i = 0 == i ? 0 : i - 1;
+				r = reps[ i ];
 				break;
 			}
 		}
@@ -504,13 +508,6 @@ public class Algorithm {
 
 		D( "exited trials loop at " + System.currentTimeMillis() );
 
-		byte[] line = null;
-		if ( arguments.debug >= 0 ) {
-			line = new byte[ 70 ];
-			Arrays.fill( line, (byte)'=' );
-			D( new String( line ) );
-		}
-
 		if ( trials.size() >= MAX_TRIALS ) {
 			D( "failed to validate statistical model for " + trials.get( 0 ) + " after " + trials.size() + " trials");
 			SimpleTrial warning_trial = new SimpleTrial( id, ann, m, param_fields, param_values[ param_set ] );
@@ -520,13 +517,103 @@ public class Algorithm {
 		}
 	}
 
+	private static byte[] line;
+	private static void hline() {
+		if ( null == line ) {
+			line = new byte[ 70 ];
+			Arrays.fill( line, (byte)'=' );
+		}
+		D( new String( line ) );
+	}
+
+	private void announceBenchmark( int n, int N, IStatistics eta ) {
+		hline();
+		D( "BENCHMARK " + ( n + 1 ) + " / " + N + approximateRemainingTime( n + 1, N, eta.mean() ) );
+		hline();
+	}
+
+	private String approximateRemainingTime( int n, int N, double avg_ns ) {
+		final String label = ". remaining: ";
+		final double ns_per_s = 1000000000D;
+		final double ns_per_min = 60.0D * ns_per_s;
+		final double ns_per_hour = 60.0D * ns_per_min;
+		final double ns_per_day = 24.0D * ns_per_hour;
+
+		if ( n <= 1 || N <= 0 ) {
+			return "";
+		}
+
+		String r = "";
+
+		double est_ns_left = (N - n) * avg_ns;
+
+		int seconds = (int) ( Math.round( est_ns_left / ns_per_s ) % 60.0D );
+		int minutes = (int) ( Math.round( est_ns_left / ns_per_min ) % 60.0D );
+		int hours = (int) ( Math.round( est_ns_left / ns_per_hour ) % 24.0D );
+		int days = (int) ( Math.round( est_ns_left / ns_per_day ) % 24.0D );
+
+		if ( days > 0 ) {
+			r += days + " days, ";
+		}
+		if ( hours > 0 || days > 0 ) {
+			r += hours + " hours, ";
+		}
+		if ( minutes > 0 || hours > 0 || days > 0 ) {
+			r += minutes + " minutes, ";
+		}
+		if ( minutes > 0 || hours > 0 || days > 0 ) {
+			r += "and ";
+		}
+		r += seconds + " seconds";
+
+		r = label + r;
+
+		return r;
+	}
+
 	private void bench()
 	throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException
 	{
 
+		if ( alcai.isEmpty() ) {
+			D( "Nothing to benchmark!" );
+			return;
+		}
+
+		SlideRuleAnnotations k = alcai.get( 0 ).klass;
+
+		final int total_number_of_microbenchmarks = k.getBenchmarkMethods().size();
+		D( "there are " + total_number_of_microbenchmarks + " micro benchmarks, per class" );
+
+		final int total_number_of_macrobenchmarks = k.getMacrobenchmarkMethods().size();
+		D( "there are " + total_number_of_macrobenchmarks + " macro benchmarks, per class" );
+
+		final int npermutations = param_values.length;
+		D( "there are " + npermutations + " permutations of parameters, per benchmark" );
+
+		final int total_number_of_benchmarks_per_class = npermutations * ( total_number_of_microbenchmarks + total_number_of_macrobenchmarks );
+		D( "there are " + total_number_of_benchmarks_per_class + " benchmarks in total, per class" );
+
+		final int nclasses = alcai.size();
+		D( "there are " + nclasses + " classes to benchmark" );
+
+		final int total_number_of_benchmarks = total_number_of_benchmarks_per_class * alcai.size();
+		D( "there are " + total_number_of_benchmarks + " benchmarks in total" );
+
+		if ( 0 == total_number_of_benchmarks ) {
+			D( "Nothing to benchmark!" );
+		}
+
+		int benchmark = 0;
+
+		// very rough average for ETA calculation
+		long eta_data_start;
+		long eta_data_end;
+		OnlineStatistics eta_data = new OnlineStatistics();
+
 		for( ClassAndInstance cai: alcai ) {
 
-			SlideRuleAnnotations k = cai.klass;
+			k = cai.klass;
 			Object o = cai.instance;
 
 			// was complaining about "java.lang.IllegalArgumentException: Can not set int field examples.FactorialBenchmark.number to examples.SumBenchmark"
@@ -543,7 +630,7 @@ public class Algorithm {
 					f.set( o, param_values[ row ][ col ].value );
 				}
 
-				D( "benchmarking " + cai.klass.getAnnotatedClass().getName() + " with parameters " + PolymorphicType.nameParams( param_fields, param_values[row] ) );
+				D( "processing " + cai.klass.getAnnotatedClass().getName() + " with parameters " + PolymorphicType.nameParams( param_fields, param_values[row] ) );
 
 				try {
 
@@ -554,14 +641,26 @@ public class Algorithm {
 
 					// perform micro benchmarking (slightly more complicated than macrobenchmarking)
 					for( Method m: k.getBenchmarkMethods() ) {
+
+						announceBenchmark( benchmark++, total_number_of_benchmarks, eta_data );
+
 						D( "Microbenchmarking " + cai.klass.getAnnotatedClass().getName() + "." + m.getName() + "()" );
+						eta_data_start = System.nanoTime();
 						mark( false, k, o, m, row );
+						eta_data_end = System.nanoTime();
+						eta_data.update( eta_data_end - eta_data_start );
 					}
 
 					// perform macro benchmarking
 					for( Method m: k.getMacrobenchmarkMethods() ) {
+
+						announceBenchmark( benchmark++, total_number_of_benchmarks, eta_data );
+
 						D( "Macrobenchmarking " + cai.klass.getAnnotatedClass().getName() + "." + m.getName() + "()" );
+						eta_data_start = System.nanoTime();
 						mark( true, k, o, m, row );
+						eta_data_end = System.nanoTime();
+						eta_data.update( eta_data_end - eta_data_start );
 					}
 
 					// allow the benchmarking class to perform some misc tasks before executing a set of trials
@@ -569,10 +668,12 @@ public class Algorithm {
 						m.invoke( o );
 					}
 				} catch( SkipThisScenarioException e ) {
+					D( "SKIPPED" );
 					continue;
 				} catch( InvocationTargetException e ) {
 					Throwable t = e.getCause();
 					if ( t instanceof SkipThisScenarioException ) {
+						D( "SKIPPED" );
 						continue;
 					}
 					throw e;
